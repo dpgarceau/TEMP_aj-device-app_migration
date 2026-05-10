@@ -107,7 +107,7 @@ public class ScoreResolverService {
             PilotScores scores = pilotService.getPilotScores(pilot);
             if (scores == null) continue;
 
-            if (scores.getActiveSequence() == 2 && "KNOWN".equalsIgnoreCase(scores.getActiveRoundType())) {
+            if (scores.getActiveSequence("KNOWN") == 2) {
                 Map<String, Object> entry = new HashMap<>();
                 entry.put("pilotId", pilot.getPrimary_id());
                 entry.put("name", pilot.getName());

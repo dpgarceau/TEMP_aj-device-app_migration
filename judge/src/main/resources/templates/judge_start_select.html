@@ -175,7 +175,7 @@
             <div class="row">
                 <div class="col s4">
                     <a th:id="'act_known'+${pilot.index}" class="type-btn known-btn" href="#"
-                       th:attr="data-pilot-idx=${pilot.index},data-pilot-id=${pilot.primary_id},data-max-sequences=${comp.sequences},data-active-sequence=${pilotScores[pilot.primary_id].activeSequence}">
+                       th:attr="data-pilot-idx=${pilot.index},data-pilot-id=${pilot.primary_id},data-max-sequences=${comp.sequences},data-active-sequence=${pilotScores[pilot.primary_id].getActiveSequence('KNOWN')}">
                         <i class="material-icons type-btn-icon">visibility</i>
                         <span class="type-btn-label">KNO</span>
                         <span class="type-btn-round" th:text="${pilotScores[pilot.primary_id].getActiveRound('KNOWN')}"></span>
@@ -239,7 +239,7 @@
                 var pilotIdx = /*[[${pilot.index}]]*/ '0';
                 var pilotId = /*[[${pilot.primary_id}]]*/ '';
                 var maxSequences = /*[[${comp.sequences}]]*/ 2;
-                var activeSequence = /*[[${pilotScores[pilot.primary_id].activeSequence}]]*/ 1;
+                var activeSequence = /*[[${pilotScores[pilot.primary_id].getActiveSequence('KNOWN')}]]*/ 1;
 
                 var overlay = $('#incomplete_overlay_' + pilotIdx);
                 var dirflipInput = $('#dirflip' + pilotIdx);

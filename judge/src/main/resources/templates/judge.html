@@ -116,7 +116,7 @@
             <div class="row">
                 <div class="col s4 left" style="font-size: 4vh; font-weight: 500; margin-left: 10px;">
                     <span>Round <span th:text="${activeRound}"></span></span>
-                    <span th:if="${roundType eq 'KNOWN'}"> Seq <span th:text="${pilotScores.activeSequence}"></span></span>
+                    <span th:if="${roundType eq 'KNOWN'}"> Seq <span th:text="${activeSequence}"></span></span>
                     <span th:if="${roundType eq 'KNOWN' or roundType eq 'UNKNOWN'}"> Dir <span class="dirletter-label" th:text="${dirletter}"></span></span>
                 </div>
                 
@@ -157,7 +157,7 @@
         const scores = [];
         const numOfManeuvers = /*[[${numOfManeuvers}]]*/ ;
         const round =  /*[[${activeRound}]]*/ ;
-        const sequence =  /*[[${pilotScores.activeSequence}]]*/ ;
+        const sequence =  /*[[${activeSequence}]]*/ ;
         const primary_id =  /*[[${pilot.primary_id}]]*/ ;
         const pilot_name =  /*[[${pilot.name}]]*/ ;
         const roundType =  /*[[${roundType}]]*/ ;
@@ -601,7 +601,7 @@
                         window.location.replace("/pilot-list-global");
                     }
                 }
-                if (responseData.activeSequence > sequence) {
+                if (responseData.activeSequenceByType[roundType] > sequence) {
                     location.reload();
                 }
             } else {

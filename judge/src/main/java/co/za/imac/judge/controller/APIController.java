@@ -370,7 +370,7 @@ public class APIController {
 
         // Increment the round for this type and reset sequence to 1
         pilotScores.incrementActiveRound(roundType);
-        pilotScores.setActiveSequence(1);
+        pilotScores.setActiveSequence(roundType, 1);
 
         // Save the updated pilot scores
         pilotService.savePilotScoresToFile(pilotScores);
@@ -604,14 +604,14 @@ public class APIController {
 
         int beforeCount = scoreResolverService.countRoundsForType(scores, roundType);
         int beforeActiveRound = scores.getActiveRound(roundType);
-        int beforeActiveSeq = scores.getActiveSequence();
+        int beforeActiveSeq = scores.getActiveSequence(roundType);
 
         float[] zeros = new float[figureCount];
         scores.getScores().add(new PScore(round, 2, zeros, "KNOWN"));
 
         // Round complete — advance state
         scores.incrementActiveRound(roundType);
-        scores.setActiveSequence(1);
+        scores.setActiveSequence(roundType, 1);
 
         pilotService.savePilotScoresToFile(scores);
 
@@ -619,7 +619,7 @@ public class APIController {
                 pilot.getPrimary_id(), pilot.getName(), pilot.getClassString(), round,
                 beforeCount, scoreResolverService.countRoundsForType(scores, roundType),
                 beforeActiveRound, scores.getActiveRound(roundType),
-                beforeActiveSeq, scores.getActiveSequence());
+                beforeActiveSeq, scores.getActiveSequence(roundType));
 
         result.put("result", "ok");
         result.put("message", "Sequence marked as not flown.");
@@ -713,7 +713,7 @@ public class APIController {
 
         int beforeCount = targetCount;
         int beforeActiveRound = scores.getActiveRound(roundType);
-        int beforeActiveSeq = scores.getActiveSequence();
+        int beforeActiveSeq = scores.getActiveSequence(roundType);
 
         String typeUpper = roundType.toUpperCase();
         scores.getScores().add(new PScore(round, 1, new float[seq1FigureCount], typeUpper));
@@ -724,9 +724,9 @@ public class APIController {
         int compSequences = compService.getComp().getSequences();
         if (!isKnown || compSequences == 1 || filledSeq2) {
             scores.incrementActiveRound(roundType);
-            scores.setActiveSequence(1);
+            scores.setActiveSequence(roundType, 1);
         } else {
-            scores.setActiveSequence(2);
+            scores.setActiveSequence(roundType, 2);
         }
 
         pilotService.savePilotScoresToFile(scores);
@@ -737,7 +737,7 @@ public class APIController {
                 sequencesFilled,
                 beforeCount, scoreResolverService.countRoundsForType(scores, roundType),
                 beforeActiveRound, scores.getActiveRound(roundType),
-                beforeActiveSeq, scores.getActiveSequence());
+                beforeActiveSeq, scores.getActiveSequence(roundType));
 
         result.put("result", "ok");
         result.put("message", "Round zeroed.");

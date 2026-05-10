@@ -255,56 +255,38 @@ public class PilotService {
     }
 
     public PilotScores setNextEvent(PilotScores pilotScore , String roundType) throws IOException {
+        String type = roundType.toUpperCase();
+        int compSequences = sequencesForType(type);
+        int currentSequence = pilotScore.getActiveSequence(type);
 
-        // fetch comp details
-        CompDTO compDTO = compService.getComp();
-        int compSequences = 0;
-        if(roundType.equalsIgnoreCase("KNOWN")){
-            compSequences = compDTO.getSequences();
-        }
-        if(roundType.equalsIgnoreCase("UNKNOWN")){
-            compSequences = compDTO.getUnknown_sequences();
-        }
-        if(roundType.equalsIgnoreCase("FREESTYLE")){
-            compSequences = 1;  // Freestyle always has 1 sequence per round
-        }
-        // check if theres a next sequence
-        if (pilotScore.getActiveSequence() < compSequences) {
-            // there is a next sequence for round increment and return
-            pilotScore.setActiveSequence((pilotScore.getActiveSequence() + 1));
-            return pilotScore;
-        }
-        if (pilotScore.getActiveSequence() == compSequences) {
-
-            // Just reset the seq back to 1 and increment the round counter for THIS TYPE.
+        if (currentSequence < compSequences) {
+            pilotScore.setActiveSequence(type, currentSequence + 1);
+        } else if (currentSequence == compSequences) {
             // Each type (KNOWN, UNKNOWN, FREESTYLE) has its own independent round counter.
-            pilotScore.incrementActiveRound(roundType);
-            pilotScore.setActiveSequence(1);
-            return pilotScore;
-
-
-            /************************************
-             * The logic below is a little off...
-             * It works but There's really no reason to keep a max rounds option.
-             * Just let the pilots keep flying until you are done...
-             *
-            // sequences for round is complete advanced round
-            if (pilotScore.getActiveRound() < compDTO.getRounds()) {
-                // theres a next round advance round
-                pilotScore.setActiveRound((pilotScore.getActiveRound() + 1));
-                pilotScore.setActiveSequence(1);
-                return pilotScore;
-            }
-            // its the last round of last sequence the pilot is done
-            if (pilotScore.getActiveRound() == compDTO.getRounds()) {
-                pilotScore.setIsActive(false);
-            }
-            return pilotScore;
-             */
-
-
+            pilotScore.incrementActiveRound(type);
+            pilotScore.setActiveSequence(type, 1);
+        } else {
+            logger.warn("activeSequence {} > compSequences {} for type {}; resetting and advancing round",
+                    currentSequence, compSequences, type);
+            pilotScore.incrementActiveRound(type);
+            pilotScore.setActiveSequence(type, 1);
         }
         return pilotScore;
+    }
+
+    private int sequencesForType(String type) throws IOException {
+        CompDTO compDTO = compService.getComp();
+        if(type.equalsIgnoreCase("KNOWN")){
+            return compDTO.getSequences();
+        }
+        if(type.equalsIgnoreCase("UNKNOWN")){
+            return compDTO.getUnknown_sequences();
+        }
+        if(type.equalsIgnoreCase("FREESTYLE")){
+            return 1;  // Freestyle always has 1 sequence per round
+        }
+        logger.warn("Unknown round type '{}' - defaulting to 1 sequence", type);
+        return 1;
     }
 
     public void syncPilotsToScoreWebService() throws IOException, ParserConfigurationException, SAXException, UnirestException {

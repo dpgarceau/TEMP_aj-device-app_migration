@@ -22,7 +22,11 @@ public class PilotScores {
         "FREESTYLE", 1
     ));
 
-    private int activeSequence = 1;
+    private Map<String, Integer> activeSequenceByType = new HashMap<>(Map.of(
+        "KNOWN", 1,
+        "UNKNOWN", 1,
+        "FREESTYLE", 1
+    ));
     private String activeRoundType = "KNOWN";
     private int judge_id;
     private List<PScore> scores = new ArrayList<>();
@@ -154,12 +158,41 @@ public class PilotScores {
         }
     }
 
-    public int getActiveSequence() {
-        return activeSequence;
+    private void ensureActiveSequenceByType() {
+        if (activeSequenceByType == null) {
+            activeSequenceByType = new HashMap<>(Map.of("KNOWN", 1, "UNKNOWN", 1, "FREESTYLE", 1));
+        }
     }
 
-    public void setActiveSequence(int activeSequence) {
-        this.activeSequence = activeSequence;
+    public int getActiveSequence(String roundType) {
+        if (roundType == null) {
+            roundType = "KNOWN";
+        }
+        ensureActiveSequenceByType();
+        return activeSequenceByType.getOrDefault(roundType.toUpperCase(), 1);
+    }
+
+    public void setActiveSequence(String roundType, int activeSequence) {
+        if (roundType == null) {
+            roundType = "KNOWN";
+        }
+        ensureActiveSequenceByType();
+        activeSequenceByType.put(roundType.toUpperCase(), activeSequence);
+    }
+
+    public void incrementActiveSequence(String roundType) {
+        setActiveSequence(roundType, getActiveSequence(roundType) + 1);
+    }
+
+    public Map<String, Integer> getActiveSequenceByType() {
+        ensureActiveSequenceByType();
+        return activeSequenceByType;
+    }
+
+    public void setActiveSequenceByType(Map<String, Integer> activeSequenceByType) {
+        if (activeSequenceByType != null) {
+            this.activeSequenceByType = activeSequenceByType;
+        }
     }
 
     public List<PScore> getScores() {

@@ -266,11 +266,12 @@ public class RootController {
         // DEBUG: Log the round number being used
         // Use per-type round number (KNOWN, UNKNOWN, FREESTYLE each have independent counters)
         int activeRoundForType = pilotScores.getActiveRound(roundType);
+        int activeSequenceForType = pilotScores.getActiveSequence(roundType);
         logger.info("=== JUDGE PAGE DEBUG ===");
         logger.info("Pilot: {} ({})", pilot.getName(), pilot.getClassString());
         logger.info("Round Type: {}", roundType);
         logger.info("Active Round for {}: {}", roundType, activeRoundForType);
-        logger.info("Active Sequence: {}", pilotScores.getActiveSequence());
+        logger.info("Active Sequence for {}: {}", roundType, activeSequenceForType);
         logger.info("All rounds by type: {}", pilotScores.getActiveRoundByType());
 
         // Resolve the folder path for figures using the new folder structure
@@ -305,6 +306,7 @@ public class RootController {
         model.addAttribute("pilot", pilot);
         model.addAttribute("pilotScores", pilotScores);
         model.addAttribute("activeRound", activeRoundForType);
+        model.addAttribute("activeSequence", activeSequenceForType);
         model.addAttribute("roundType", roundType.toUpperCase());
         model.addAttribute("sequenceType", sequenceType);
         model.addAttribute("sequenceFolderPath", sequenceFolderPath);
