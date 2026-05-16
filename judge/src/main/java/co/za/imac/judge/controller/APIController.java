@@ -113,6 +113,11 @@ public class APIController {
             logger.info("Updated sequenceType to: {}", comp.getSequenceType());
         }
         if (comp.getScore_mode() != null) {
+            if (!isSupportedScoreMode(comp.getScore_mode())) {
+                result.put("result", "fail");
+                result.put("message", "Unsupported scoring mode.");
+                return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.BAD_REQUEST);
+            }
             if ("byRound".equalsIgnoreCase(currentComp.getScore_mode())
                     && !"byRound".equalsIgnoreCase(comp.getScore_mode())
                     && roundsService.isScoringRound()) {
@@ -142,6 +147,11 @@ public class APIController {
             throws IOException, ParserConfigurationException, SAXException, URISyntaxException {
 
         Map<String, Object> result = new HashMap<>();
+        if (comp.getScore_mode() != null && !isSupportedScoreMode(comp.getScore_mode())) {
+            result.put("result", "fail");
+            result.put("message", "Unsupported scoring mode.");
+            return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.BAD_REQUEST);
+        }
 
         if (editComp) {
             CompDTO currentComp = compService.getComp();
@@ -266,39 +276,11 @@ public class APIController {
     @PostMapping("/api/rounds/phase")
     public ResponseEntity<String> adjustRound(@RequestBody Map<String, Object> payload)
             throws IOException, ParserConfigurationException, SAXException {
-        logger.debug("Performing action " + payload.get("action") + " on round " + payload.get("round_id") + ".");
         Map<String, Object> result = new HashMap<>();
         result.put("action", payload.get("action"));
-        result.put("message", "");
-
-        Map<String, Object> res;
-        switch ((String) payload.get("action")) {
-            case "fly":
-                res = roundsService.activateRoundForScoring(Integer.parseInt((String) payload.get("round_id")));
-                if ((Boolean) res.get("success")) {
-                    result.put("result", "ok");
-                } else {
-                    result.put("result", "fail");
-                    result.put("message", res.get("message"));
-                    return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.BAD_REQUEST);
-                }
-                break;
-            case "close":
-                res = roundsService.closeRound(Integer.parseInt((String) payload.get("round_id")));
-                if ((Boolean) res.get("success")) {
-                    result.put("result", "ok");
-                } else {
-                    result.put("result", "fail");
-                    result.put("message", res.get("message"));
-                    return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.BAD_REQUEST);
-                }
-                break;
-            default:
-                result.put("result", "fail");
-                result.put("message", "Unknown action.");
-                return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.OK);
+        result.put("result", "fail");
+        result.put("message", "Round phase actions are no longer supported.");
+        return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.GONE);
     }
 
     @PostMapping("/api/rounds/active/clear")
@@ -436,6 +418,10 @@ public class APIController {
             }
         }
         return scoredPilots;
+    }
+
+    private boolean isSupportedScoreMode(String scoreMode) {
+        return "global".equalsIgnoreCase(scoreMode) || "byRound".equalsIgnoreCase(scoreMode);
     }
 
     @GetMapping("/api/settings")

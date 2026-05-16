@@ -410,16 +410,6 @@ public class RootController {
                         logger.info("scoreMode byRound : Redirecting to new round page.");
                         return "redirect:/newround";
                     }
-                case "flightline":
-                    if (roundService.isScoringRound()) {
-                        model.addAttribute("currentScoringRound", roundService.getScoringRound());
-                        logger.info("scoreMode flightline : Redirecting to pilot-list-round");
-                        return "redirect:/pilot-list-round";
-                    } else {
-                        // We have to either choose or wait for a round to be chosen for us.
-                        logger.info("scoreMode flightline : No active round yet, nothing to do.");
-                        return "/rounds";
-                    }
                 case "global":
                     logger.info("scoreMode global : Redirecting to pilot-list-global");
                     return "redirect:/pilot-list-global";
@@ -602,12 +592,6 @@ public class RootController {
                 return "redirect:/pilot-list-round";
             }
             return "redirect:/newround";
-        }
-        if ("flightline".equalsIgnoreCase(scoreMode)) {
-            if (roundService.isScoringRound()) {
-                return "redirect:/pilot-list-round";
-            }
-            return "redirect:/rounds";
         }
         return "redirect:/pilot-list-global";
     }

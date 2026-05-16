@@ -83,7 +83,6 @@ public class RoundsService {
 
 
     public Map<String, Object> activateRoundForScoring(Integer i) {
-        // Choose the round to score.   Reset the others..
         Map<String, Object> res = new HashMap<String, Object>();
         if (i == null) {
             res.put("message", "You must supply a round ID.");
@@ -101,14 +100,6 @@ public class RoundsService {
 
         this.roundsDTO.setScoringRoundNum(i);
 
-        for (RoundDTO rnd : roundsDTO.getRounds()) {
-            if ("F".equalsIgnoreCase(rnd.getPhase())) {
-                // Pause the other round that is flying...
-                // We could check if they have zero scores.  Then phase could be "U".
-                rnd.setPhase("P");
-            }
-        }
-        r.setPhase("F");
         if (r.getStarted_at() == null) {
             // ISO-8601 with offset is the starting format for future round ordering/audit use.
             r.setStarted_at(getRoundTimestamp());
@@ -144,14 +135,13 @@ public class RoundsService {
         }
 
         RoundDTO scoringRound = this.getScoringRound();
-        if (!"F".equalsIgnoreCase(r.getPhase()) || scoringRound == null || !r.getRound_id().equals(scoringRound.getRound_id())) {
+        if (scoringRound == null || !r.getRound_id().equals(scoringRound.getRound_id())) {
             res.put("message", "This is not the active round.");
             res.put("success", Boolean.FALSE);
             logger.error((String) res.get("message"));
             return res;
         }
 
-        r.setPhase("D");
         r.setClosed_at(getRoundTimestamp());
         this.roundsDTO.setScoringRoundNum(null);
         if (!saveRoundsToFile()) {
@@ -207,23 +197,6 @@ public class RoundsService {
 
 
     public boolean isScoringRound() throws IOException {
-        // There are rounds set to 'F'.
-        /**********
-         *  Too complicated this way...   Just see if we have an active scoring round.
-
-        if (roundsDTO == null && ! this.setupRoundsDTO(compService.getComp().getComp_id())) {
-            logger.error("Could not set up the rounds file!!!  This is bad!");
-            return false;
-        }
-
-        for (Round r : roundsDTO.getRounds()) {
-            if (new String("F").equalsIgnoreCase(r.getPhase()) ) {
-                return true;
-            }
-        }
-        return false;
-
-         */
         logger.info("Is there an active round? : " + (this.getScoringRound() != null));
         return (this.getScoringRound() != null);
     }
@@ -301,18 +274,6 @@ public class RoundsService {
     public List<RoundDTO> getRounds() {
         return roundsDTO.getRounds();
     }
-
-    public List<RoundDTO>  getFlyingRounds() {
-        // Iterate over the rounds list and add the ones which are 'Flying' to the list
-        List<RoundDTO> activeRounds = new ArrayList<>();
-        for (RoundDTO rnd : roundsDTO.getRounds()) {
-            if ("F".equalsIgnoreCase(rnd.getPhase())) {
-                activeRounds.add(rnd);
-            }
-        }
-        return activeRounds;
-    }
-
 
     public RoundDTO addRound(RoundDTO round) {
         return addRound(round, null, null);

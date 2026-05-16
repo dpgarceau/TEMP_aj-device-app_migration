@@ -59,64 +59,26 @@
             <th class="heading">Round</th>
             <th class="heading">Seqs.</th>
             <th class="heading">Schedule</th>
-            <th class="heading">State</th>
-            <th class="heading">Action</th>
+            <th class="heading">Started</th>
+            <th class="heading">Closed</th>
           </tr>
           </thead>
           <tbody>
           <tr th:if="${rounds.empty}">
             <td colspan="8"> No Rounds </td>
           </tr>
-          <tr th:if="${mode=='all'}" th:each="round : ${rounds}">
+          <tr th:each="round : ${rounds}">
             <td class="hiddendiv light data"><span th:text="${round.round_id}">id</span></td>
             <td class="light data"><span th:text="${round.comp_class}">comp_class</span></td>
             <td class="light data"><span th:text="${round.type}">type</span></td>
             <td class="light data"><span th:text="${round.round_num}">round_num</span></td>
             <td class="light data"><span th:text="${round.sequences}">sequences</span></td>
             <td class="light data"><span th:text="${round.sched_desc}">sched_desc</span></td>
-            <td class="light data" th:switch="${round.phase}">
-              <span th:case="U">Unflown</span>
-              <span th:case="P">Paused</span>
-              <span th:case="D">Complete</span>
-              <span th:case="F">Flying</span>
-            </td>
-            <td class="light data" th:switch="${round.phase}">
-              <span th:if="! ${isScoringRound}">
-                <a th:case="U" href="#" data-action="fly" th:attr="data-round_id=${round.round_id}" class="roundActionButton btn orange darken-1">Fly</a>
-                <a th:case="P" href="#" data-action="fly" th:attr="data-round_id=${round.round_id}" class="roundActionButton btn orange darken-1">Fly</a>
-              </span>
-              <span th:if="${isScoringRound}">
-                <a th:case="F" href="#" data-action="close" th:attr="data-round_id=${round.round_id}" class="roundActionButton btn orange darken-1">Close</a>
-                <a th:case="U" href="#" data-action="fly" th:attr="data-round_id=${round.round_id}" class="roundActionButton btn orange darken-1">Switch</a>
-                <a th:case="P" href="#" data-action="fly" th:attr="data-round_id=${round.round_id}" class="roundActionButton btn orange darken-1">Switch</a>
-              </span>
-            </td>
-          </tr>
-          <tr th:if="${mode=='completed'}" th:each="round,rowStat : ${rounds.?[phase == 'D']}">
-            <td class="hiddendiv light data"><span th:text="${round.round_id}">id</span></td>
-            <td class="light data"><span th:text="${round.comp_class}">comp_class</span></td>
-            <td class="light data"><span th:text="${round.type}">type</span></td>
-            <td class="light data"><span th:text="${round.round_num}">round_num</span></td>
-            <td class="light data"><span th:text="${round.sequences}">sequences</span></td>
-            <td class="light data"><span th:text="${round.description}">sched_desc</span></td>
-            <td class="light data" th:switch="${round.phase}">
-              <span th:case="U">Unflown</span>
-              <span th:case="P">Paused</span>
-              <span th:case="D">Complete</span>
-              <span th:case="F">Flying</span>
-            </td>
-            <td class="light data" th:switch="${round.phase}">
-              <span th:if="! ${isScoringRound}">
-                <a th:case="U" href="#" data-action="fly" th:attr="data-round_id=${round.round_id}" class="roundActionButton btn orange darken-1">Fly</a>
-                <a th:case="P" href="#" data-action="fly" th:attr="data-round_id=${round.round_id}" class="roundActionButton btn orange darken-1">Fly</a>
-              </span>
-            </td>
+            <td class="light data"><span th:text="${round.started_at ?: '-'}">started_at</span></td>
+            <td class="light data"><span th:text="${round.closed_at ?: '-'}">closed_at</span></td>
           </tr>
           </tbody>
         </table>
-      </div>
-      <div class="row center">
-        <a href="/newround" id="createRound" class="waves-effect waves-light btn orange darken-1 pulse">Add Round</a>
       </div>
       <br>
     </div>
@@ -134,51 +96,6 @@
   <script src="materialize/js/materialize.js"></script>
   <script th:inline="javascript">
     /*<![CDATA[*/
-    const isCurrentComp = /*[[${isCurrentComp}]]*/ ;
-    const isScoringRound = /*[[${isScoringRound}]]*/ ;
-    const currentScoringRound = /*[[${currentScoringRound}]]*/ ;
-
-    const schedules = /*[[${schedules}]]*/ ;
-    const rounds = /*[[${rounds}]]*/ ;
-
-    $(".roundActionButton").click(function () {
-      console.log('INFO: Clicked ' + $(this).attr("data-action") + " on round " + $(this).attr("data-round_id"));
-
-      // Send the request to the API to adjust the round state.
-      $.ajax({
-        type: "POST",
-        url: "/api/rounds/phase",
-        // The key needs to match your method's input parameter (case-sensitive).
-        data: JSON.stringify(
-                {
-                  round_id: $(this).attr("data-round_id"),
-                  action: $(this).attr("data-action")
-                }
-        ),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        success: function (data) {
-          //console.log("Got: " + data);
-          //window.location = "/"
-          //resultData = JSON.parse(data);
-          console.log(data.action + ":" + data.result + ":" + data.message);
-          location.reload();
-        },
-        error: function (err) {
-          try {
-            // If we were able to return a proper JSON Object, get the message from there.
-            M.toast({ html: 'Round change error: ' + JSON.parse(err.responseText).message})
-          } catch {
-            // Otherwise just use the default jquery way...
-            console.log("There was an error in the ajax operation: " + err.statusText);
-            console.log("ResponseText: " + err.responseText);
-            M.toast({ html: 'Round change error: ' + err.responseText.substring(0, 80)})
-          }
-        },
-        complete: function() {}
-      });
-    });
-
     /*]]>*/
   </script>
 </body>
