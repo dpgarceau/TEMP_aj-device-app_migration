@@ -162,6 +162,7 @@
         const pilot_name =  /*[[${pilot.name}]]*/ ;
         const roundType =  /*[[${roundType}]]*/ ;
         const pilot_class =  /*[[${pilot_class}]]*/ ;
+        const scoreMode =  /*[[${scoreMode}]]*/ 'global';
         const sequenceJson = JSON.parse( /*[[${sequencesjson}]]*/);
         var audio = new Audio();
 
@@ -592,20 +593,25 @@
         }
 
         function nextEvent(responseData) {
+            const pilotListUrl = scoreMode === 'byRound' ? '/pilot-list-round' : '/pilot-list-global';
             if (responseData.isActive) {
                 // Use per-type round tracking - check if round advanced for current type
                 if (responseData.activeRoundByType[roundType] > round) {
-                    if (classFilter && classFilter != "global") {
-                        window.location.replace("/pilot-list-global?classFilter=" + classFilter);
+                    if (scoreMode !== 'byRound' && classFilter && classFilter != "global") {
+                        window.location.replace(pilotListUrl + "?classFilter=" + classFilter);
                     } else {
-                        window.location.replace("/pilot-list-global");
+                        window.location.replace(pilotListUrl);
                     }
                 }
                 if (responseData.activeSequenceByType[roundType] > sequence) {
                     location.reload();
                 }
             } else {
-                window.location.replace("/pilot-list-global?classFilter=" + classFilter);
+                if (scoreMode !== 'byRound' && classFilter && classFilter != "global") {
+                    window.location.replace(pilotListUrl + "?classFilter=" + classFilter);
+                } else {
+                    window.location.replace(pilotListUrl);
+                }
             }
         }
         $("#buttonsDiv").hide();

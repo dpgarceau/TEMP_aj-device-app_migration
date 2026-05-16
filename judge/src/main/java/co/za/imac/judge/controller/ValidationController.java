@@ -84,7 +84,7 @@ public class ValidationController {
     public String continueAnyway(HttpSession session) {
         logger.warn("User chose to continue despite validation errors");
         session.setAttribute("validationOverridden", true);
-        return "redirect:/pilot-list-global";
+        return "redirect:/";
     }
 
     /**

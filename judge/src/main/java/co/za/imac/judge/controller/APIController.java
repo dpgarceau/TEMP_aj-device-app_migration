@@ -113,6 +113,13 @@ public class APIController {
             logger.info("Updated sequenceType to: {}", comp.getSequenceType());
         }
         if (comp.getScore_mode() != null) {
+            if ("byRound".equalsIgnoreCase(currentComp.getScore_mode())
+                    && !"byRound".equalsIgnoreCase(comp.getScore_mode())
+                    && roundsService.isScoringRound()) {
+                result.put("result", "fail");
+                result.put("message", "Finish or clear the active round before leaving By Round mode.");
+                return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.CONFLICT);
+            }
             currentComp.setScore_mode(comp.getScore_mode());
             logger.info("Updated score_mode to: {}", comp.getScore_mode());
         }
@@ -222,6 +229,12 @@ public class APIController {
         } else {
             // Before we can add a new round, we need to get round number / round ID
             // editRound is false so we're just going to overwrite what we were given.
+
+            if ("byRound".equalsIgnoreCase(compService.getComp().getScore_mode()) && roundsService.isScoringRound()) {
+                result.put("result", "fail");
+                result.put("message", "An RBR round is already active.");
+                return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.CONFLICT);
+            }
 
             RoundDTO newRound = roundsService.addRound(round);
             if (newRound != null) {

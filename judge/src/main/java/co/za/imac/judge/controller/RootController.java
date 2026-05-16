@@ -86,7 +86,7 @@ public class RootController {
             logger.info("There is no Comp!! redirecting");
             return "redirect:/newcomp";
         }
-        return "redirect:/pilot-list-global";
+        return redirectForCurrentScoringMode();
 
         // // Now if we have a comp, are we scoring a round?
         // logger.info("Are we scoring a round?? : " + roundService.isScoringRound());
@@ -111,6 +111,12 @@ public class RootController {
             logger.debug("Redirect to newcomp page.");
             logger.info("There is no Comp!! redirecting");
             return "redirect:/newcomp";
+        }
+        if (isByRoundMode()) {
+            if (roundService.isScoringRound()) {
+                return "redirect:/pilot-list-round";
+            }
+            return "redirect:/newround";
         }
 
         List<Pilot> pilots = pilotService.getPilots(true);
@@ -191,6 +197,9 @@ public class RootController {
         if (roundToScore == null) {
             // Tell them to choose a round to Score.
             logger.debug("Redirect to new round page.");
+            if (isByRoundMode()) {
+                return "redirect:/newround";
+            }
             return "redirect:/rounds";
         }
 
@@ -308,6 +317,7 @@ public class RootController {
         model.addAttribute("activeRound", activeRoundForType);
         model.addAttribute("activeSequence", activeSequenceForType);
         model.addAttribute("roundType", roundType.toUpperCase());
+        model.addAttribute("scoreMode", compService.getComp().getScore_mode());
         model.addAttribute("sequenceType", sequenceType);
         model.addAttribute("sequenceFolderPath", sequenceFolderPath);
         model.addAttribute("pilot_class", pilot.getClassString());
@@ -403,6 +413,15 @@ public class RootController {
 
     @GetMapping("/newround")
     public String newRound(Model model) throws IOException {
+        if (!compService.isCurrentComp()) {
+            logger.debug("Redirect to newcomp page.");
+            return "redirect:/newcomp";
+        }
+
+        if (roundService.isScoringRound()) {
+            logger.info("Active round exists. Redirecting from newround to pilot-list-round.");
+            return "redirect:/pilot-list-round";
+        }
 
         // We need to send the list of rounds and available schedules to the page.
         model.addAttribute("rounds", roundService.getRounds());
@@ -486,5 +505,29 @@ public class RootController {
         SettingDTO settings = settingService.getSettings();
         model.addAttribute("settings", settings);
         return "adminScoresSwap";
+    }
+
+    private boolean isByRoundMode() {
+        return compService.getComp() != null && "byRound".equalsIgnoreCase(compService.getComp().getScore_mode());
+    }
+
+    private String redirectForCurrentScoringMode() throws IOException {
+        if (compService.getComp() == null) {
+            return "redirect:/newcomp";
+        }
+        String scoreMode = compService.getComp().getScore_mode();
+        if ("byRound".equalsIgnoreCase(scoreMode)) {
+            if (roundService.isScoringRound()) {
+                return "redirect:/pilot-list-round";
+            }
+            return "redirect:/newround";
+        }
+        if ("flightline".equalsIgnoreCase(scoreMode)) {
+            if (roundService.isScoringRound()) {
+                return "redirect:/pilot-list-round";
+            }
+            return "redirect:/rounds";
+        }
+        return "redirect:/pilot-list-global";
     }
 }
