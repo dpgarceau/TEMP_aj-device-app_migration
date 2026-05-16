@@ -21,6 +21,16 @@
         .pilot_round {
             font-size: calc(4vw + 3vh) !important;
         }
+
+        .modal {
+            border-radius: 20px !important;
+            max-height: 98% !important;
+            top: 5% !important;
+        }
+
+        .modal-content {
+            padding: 10px !important;
+        }
         
         .toastMessage {
             font-size: calc(2vw + 1vh) !important;
@@ -52,11 +62,9 @@
 
         <!-- Show rounds and judge button -->
         <div style="margin-top: 20px;">
-            <h5 style="font-weight: 600; margin-bottom: 15px; text-align: center;" th:text="${activeRoundLabel}">Active Round</h5>
-
-            <div style="display: flex; justify-content: center;">
-                <div style="border-bottom: 1px solid #999; padding: 5px 20px; min-width: 220px;">
-                    <div style="text-align: center; font-weight: 500; font-size: 1.2rem; color: #666;" th:text="${activeRoundType}">KNOWN</div>
+            <div style="display: flex; justify-content: center; gap: 15px;">
+                <div style="border-bottom: 1px solid #999; padding: 5px 15px; min-width: 140px;">
+                    <div style="text-align: center; font-weight: 500; font-size: 1.1rem; color: #666;" th:text="${activeRoundType}">KNOWN</div>
                     <div style="text-align: center; font-size: 1.1rem; color: #666;">
                         Round <span style="font-weight: 700; font-size: 2rem; color: #1976d2;" th:text="${activeRoundNum}"></span>
                     </div>

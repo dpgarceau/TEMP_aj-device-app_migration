@@ -29,6 +29,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import co.za.imac.judge.dto.CompDTO;
 import co.za.imac.judge.dto.FigureDTO;
+import co.za.imac.judge.dto.PScore;
 import co.za.imac.judge.dto.ScheduleDTO;
 import co.za.imac.judge.dto.Pilot;
 import co.za.imac.judge.dto.PilotScores;
@@ -222,7 +223,7 @@ public class RootController {
             model.addAttribute("errorMessage", "These pilots are behind "
                     + getRoundContextLabel(roundToScore)
                     + ": " + String.join(", ", behindPilotNames)
-                    + ". Give this device to the Contest Director or Scorekeeper for score repair.");
+                    + ". Give this device to the Contest Director or Scorekeeper to make the needed score edits.");
             return "error";
         }
 
@@ -438,6 +439,7 @@ public class RootController {
         }
 
         // We need to send the list of rounds and available schedules to the page.
+        model.addAttribute("settings", settingService.getSettings());
         model.addAttribute("rounds", roundService.getRounds());
         model.addAttribute("schedules", scheduleService.getSchedules());
         model.addAttribute("roundOptions", buildRoundOptions());
@@ -512,6 +514,7 @@ public class RootController {
         model.addAttribute("compName", compService.getComp().getComp_name());
         RoundDTO activeRound = roundService.getScoringRound();
         model.addAttribute("activeRoundLabel", activeRound == null ? null : getRoundContextLabel(activeRound));
+        model.addAttribute("activeRoundCanClear", activeRound != null && !activeRoundHasScores(activeRound));
         return "admin";
     }
 
@@ -552,6 +555,22 @@ public class RootController {
             return Boolean.TRUE.equals(pilot.getFreestyle());
         }
         return pilot.getClassString() != null && pilot.getClassString().equalsIgnoreCase(round.getComp_class());
+    }
+
+    private boolean activeRoundHasScores(RoundDTO round)
+            throws ParserConfigurationException, SAXException, IOException {
+        for (Pilot pilot : pilotService.getPilots(false)) {
+            if (!isPilotInActiveRoundCohort(pilot, round)) {
+                continue;
+            }
+            PilotScores pilotScores = pilotService.getPilotScores(pilot);
+            for (PScore score : pilotScores.getScores()) {
+                if (round.getType().equalsIgnoreCase(score.getType()) && score.getRound() == round.getRound_num()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private String getRoundContextLabel(RoundDTO round) {

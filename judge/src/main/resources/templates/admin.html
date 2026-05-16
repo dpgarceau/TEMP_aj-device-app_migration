@@ -65,8 +65,8 @@
       border-color: #ef6c00;
       background: #fff3e0;
     }
-    .repair-action {
-      margin-top: 8px;
+    .admin-tile-link:active .repair-tile {
+      background: #ffe0b2;
     }
   </style>
 </head>
@@ -89,20 +89,17 @@
 
       <p class="event-line" th:text="${compName}"></p>
 
-      <div class="admin-tile repair-tile" th:if="${activeRoundLabel != null}">
-        <div class="admin-tile-title">Active Round Repair</div>
-        <div class="admin-tile-text">
-          Clear mistaken active round: <strong th:text="${activeRoundLabel}"></strong>
+      <a href="#clearActiveRoundModal" class="admin-tile-link modal-trigger" th:if="${activeRoundCanClear}">
+        <div class="admin-tile repair-tile">
+          <div class="admin-tile-title">Active Round Repair</div>
+          <div class="admin-tile-text">
+            Clear mistaken active round: <strong th:text="${activeRoundLabel}"></strong>
+          </div>
+          <div class="admin-tile-text">
+            Only works if no scores exist for this round.
+          </div>
         </div>
-        <div class="admin-tile-text">
-          Only works if no scores exist for this round.
-        </div>
-        <div class="repair-action">
-          <a href="#clearActiveRoundModal" class="waves-effect waves-light btn orange darken-2 modal-trigger">
-            Clear Active Round
-          </a>
-        </div>
-      </div>
+      </a>
 
       <a href="/admin/comp" class="admin-tile-link">
         <div class="admin-tile">
@@ -128,7 +125,7 @@
     </div>
   </div>
 
-  <div id="clearActiveRoundModal" class="modal">
+  <div id="clearActiveRoundModal" class="modal" th:if="${activeRoundCanClear}">
     <div class="modal-content">
       <h5>Clear Active Round?</h5>
       <p style="font-size: 1.2rem;">

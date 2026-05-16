@@ -149,12 +149,20 @@
                 font-size: 0.9rem;
             }
             .rbr-start-btn {
-                width: 100%;
-                height: 64px;
-                line-height: 64px;
-                font-size: 1.5rem;
+                width: auto;
+                min-width: 180px;
+                height: 58px;
+                line-height: 58px;
+                font-size: 1.3rem;
                 font-weight: 700;
                 text-transform: none;
+            }
+            .start-instruction {
+                font-size: 1.5rem;
+                line-height: 1.15;
+                font-weight: 700;
+                text-align: center;
+                margin: 30px 0 12px;
             }
         </style>
 
@@ -178,13 +186,13 @@
                 </div>
             </div>
 
-            <h6 class="black-text" style="margin-top: 30px;"
+            <h6 class="black-text start-instruction"
                 th:text="${comp.score_mode == 'byRound'} ? ${activeRoundLabel} : 'Touch on TYPE button to start judging'">
                 Touch on TYPE button to start judging
             </h6>
 
             <div class="row" th:if="${comp.score_mode == 'byRound'}">
-                <div class="col s12">
+                <div class="col s12 center-align">
                     <a th:id="'act_rbr'+${pilot.index}" class="waves-effect waves-light btn-large orange darken-1 rbr-start-btn" href="#">
                         Start Judging
                     </a>
