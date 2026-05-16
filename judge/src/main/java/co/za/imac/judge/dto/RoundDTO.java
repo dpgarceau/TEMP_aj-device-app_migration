@@ -13,6 +13,8 @@ public class RoundDTO {
      *              "sched_id": "SPO2023s",     // What's the sequence?
      *              "sequences": 2,             // How many seqs to score in this round
      *              "phase": "U",               // What is the round state - UOPD - Unflown, Open (Flying), Paused, Done(Complete)
+     *              "started_at": "2026-05-16T10:15:30-04:00",
+     *              "closed_at": "2026-05-16T10:25:30-04:00"
      *          }
      *
      * Rounds object would look like this:   (See RoundsDTO.java)
@@ -35,6 +37,8 @@ public class RoundDTO {
     private String sched_desc = null;
     private int sequences = 1;
     private String phase = "U";
+    private String started_at = null;
+    private String closed_at = null;
 
     public RoundDTO() {
     }
@@ -74,4 +78,8 @@ public class RoundDTO {
         return phase;
     }
     public void setPhase(String phase) { this.phase = phase; }
+    public String getStarted_at() { return started_at; }
+    public void setStarted_at(String started_at) { this.started_at = started_at; }
+    public String getClosed_at() { return closed_at; }
+    public void setClosed_at(String closed_at) { this.closed_at = closed_at; }
 }

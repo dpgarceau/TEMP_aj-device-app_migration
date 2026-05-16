@@ -225,16 +225,25 @@ public class APIController {
 
             RoundDTO newRound = roundsService.addRound(round);
             if (newRound != null) {
-                roundsService.saveRoundsToFile();
-                result.put("result", "ok");
-                result.put("message", "New round created.");
-                result.put("new_round", new Gson().toJson(newRound));
+                if (!roundsService.saveRoundsToFile()) {
+                    result.put("result", "fail");
+                    result.put("message", "Could not save round data.");
+                    return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
 
                 // Set it active if we are in byRound mode.
                 if ("byRound".equalsIgnoreCase(compService.getComp().getScore_mode())) {
-                    roundsService.activateRoundForScoring(newRound.getRound_id());
+                    Map<String, Object> activateResult = roundsService.activateRoundForScoring(newRound.getRound_id());
+                    if (!(Boolean) activateResult.get("success")) {
+                        result.put("result", "fail");
+                        result.put("message", activateResult.get("message"));
+                        return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
                 }
 
+                result.put("result", "ok");
+                result.put("message", "New round created.");
+                result.put("new_round", new Gson().toJson(newRound));
                 return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.OK);
             } else
                 return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.BAD_REQUEST);

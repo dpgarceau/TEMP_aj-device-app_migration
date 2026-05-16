@@ -1,6 +1,7 @@
 package co.za.imac.judge.service;
 
 import java.io.*;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import co.za.imac.judge.dto.RoundDTO;
@@ -108,6 +109,17 @@ public class RoundsService {
             }
         }
         r.setPhase("F");
+        if (r.getStarted_at() == null) {
+            // ISO-8601 with offset is the starting format for future round ordering/audit use.
+            r.setStarted_at(getRoundTimestamp());
+        }
+        r.setClosed_at(null);
+        if (!saveRoundsToFile()) {
+            res.put("message", "Could not save active round state.");
+            res.put("success", Boolean.FALSE);
+            logger.error((String) res.get("message"));
+            return res;
+        }
         res.put("message", "");
         res.put("success", Boolean.TRUE);
 
@@ -131,7 +143,8 @@ public class RoundsService {
             return res;
         }
 
-        if (!"F".equalsIgnoreCase(r.getPhase()) || r.getRound_id() != this.getScoringRound().getRound_id()) {
+        RoundDTO scoringRound = this.getScoringRound();
+        if (!"F".equalsIgnoreCase(r.getPhase()) || scoringRound == null || !r.getRound_id().equals(scoringRound.getRound_id())) {
             res.put("message", "This is not the active round.");
             res.put("success", Boolean.FALSE);
             logger.error((String) res.get("message"));
@@ -139,7 +152,14 @@ public class RoundsService {
         }
 
         r.setPhase("D");
+        r.setClosed_at(getRoundTimestamp());
         this.roundsDTO.setScoringRoundNum(null);
+        if (!saveRoundsToFile()) {
+            res.put("message", "Could not save closed round state.");
+            res.put("success", Boolean.FALSE);
+            logger.error((String) res.get("message"));
+            return res;
+        }
         res.put("message", "Closed round " + i);
         res.put("success", Boolean.TRUE);
         logger.info((String) res.get("message"));
@@ -345,5 +365,9 @@ public class RoundsService {
             }
         }
         return (currentTopRound + 1);
+    }
+
+    private String getRoundTimestamp() {
+        return OffsetDateTime.now().toString();
     }
 }
