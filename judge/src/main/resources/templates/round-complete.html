@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0" />
+  <title>Round Complete</title>
+
+  <link href="materialize/css/material_lcons.css" rel="stylesheet">
+  <link href="materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+  <style>
+    body {
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .complete-shell {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 18px;
+      box-sizing: border-box;
+    }
+
+    .complete-title {
+      font-size: calc(4vw + 4vh);
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .complete-detail {
+      font-size: calc(1.8vw + 2.4vh);
+      font-weight: 600;
+      margin: 0 0 12px;
+    }
+
+    .complete-summary {
+      font-size: calc(1.2vw + 1.8vh);
+      margin: 0 0 28px;
+    }
+
+    .next-btn {
+      min-width: 220px;
+      height: 64px;
+      line-height: 64px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-transform: none;
+    }
+  </style>
+</head>
+
+<body class="green lighten-4">
+  <div class="complete-shell green lighten-4 black-text">
+    <div>
+      <h1 class="complete-title green-text text-darken-3">Round Complete</h1>
+      <div class="complete-detail" th:text="${completedRoundLabel}">Sportsman Known - Round 2</div>
+      <div class="complete-summary" th:if="${completedPilotCount != null}">
+        <span th:text="${completedPilotCount}">0</span> pilots complete
+      </div>
+      <a href="/newround" class="waves-effect waves-light btn-large green darken-2 next-btn">Next Round</a>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    const language = /*[[${settings.language}]]*/ 'en';
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const audio = new Audio('/man/' + language + '/audio/roundcompleted.mp3');
+      audio.onerror = function () {};
+      audio.play().catch(function () {});
+
+      window.setTimeout(function () {
+        window.location.replace('/newround');
+      }, 10000);
+    });
+    /*]]>*/
+  </script>
+</body>
+</html>

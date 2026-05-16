@@ -21,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.xml.sax.SAXException;
 
 import com.google.gson.Gson;
@@ -168,7 +169,8 @@ public class RootController {
     }
 
     @GetMapping("/pilot-list-round")
-    public String pilotListRound(Model model,@RequestParam(name = "classFilter", required = false) String classFilter)
+    public String pilotListRound(Model model,@RequestParam(name = "classFilter", required = false) String classFilter,
+            RedirectAttributes redirectAttributes)
             throws IOException, ParserConfigurationException, SAXException, UnirestException {
         /******************
          * Create the carousel for the pilot selector.
@@ -225,9 +227,13 @@ public class RootController {
         }
 
         if (filteredPilots.isEmpty()) {
+            String completedRoundLabel = getRoundContextLabel(roundToScore);
+            int completedPilotCount = activeCohort.size();
             Map<String, Object> closeResult = roundService.closeRound(roundToScore.getRound_id());
             if ((Boolean) closeResult.get("success")) {
-                return "redirect:/newround";
+                redirectAttributes.addFlashAttribute("completedRoundLabel", completedRoundLabel);
+                redirectAttributes.addFlashAttribute("completedPilotCount", completedPilotCount);
+                return "redirect:/round-complete";
             }
             model.addAttribute("errorTitle", "RBR Round Close Error");
             model.addAttribute("errorMessage", closeResult.get("message"));
@@ -447,6 +453,25 @@ public class RootController {
         model.addAttribute("roundOptions", buildRoundOptions());
         logger.debug("Schedule Count: " + scheduleService.getSchedules().size());
         return "newround";
+    }
+
+    @GetMapping("/round-complete")
+    public String roundComplete(Model model) throws IOException {
+        if (!compService.isCurrentComp()) {
+            return "redirect:/newcomp";
+        }
+        if (roundService.isScoringRound()) {
+            return "redirect:/pilot-list-round";
+        }
+
+        if (!model.containsAttribute("completedRoundLabel")) {
+            model.addAttribute("completedRoundLabel", "Round Complete");
+        }
+        if (!model.containsAttribute("completedPilotCount")) {
+            model.addAttribute("completedPilotCount", null);
+        }
+        model.addAttribute("settings", settingService.getSettings());
+        return "round-complete";
     }
 
     @GetMapping("/admin/comp")
