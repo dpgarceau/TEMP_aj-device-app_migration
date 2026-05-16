@@ -224,6 +224,13 @@ public class RoundsService {
         return true;
     }
 
+    public boolean resetRoundsForComp(int comp_id) {
+        roundsDTO = new RoundsDTO();
+        roundsDTO.setComp_id(comp_id);
+        roundsDTO.setScoringRoundNum(null);
+        return saveRoundsToFile();
+    }
+
 
     public boolean loadRoundsFromFile() throws IOException{
 

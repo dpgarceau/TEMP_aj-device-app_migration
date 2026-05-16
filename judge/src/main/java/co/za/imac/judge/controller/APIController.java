@@ -202,6 +202,12 @@ public class APIController {
 
             result.put("comp", new Gson().toJson(newComp));
 
+            if (!editComp && !roundsService.resetRoundsForComp(newComp.getComp_id())) {
+                result.put("result", "fail");
+                result.put("message", "Could not reset round data for the new event.");
+                return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
             //now try to fetch unknown figures if there are UNKNOWN sequences
             try {
                 if (sequenceService.hasUnknownSequences()) {
