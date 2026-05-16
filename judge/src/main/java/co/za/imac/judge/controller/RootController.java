@@ -178,15 +178,6 @@ public class RootController {
          */
         // Check first if we have a valid comp
         logger.info("Is there a comp? : " + compService.isCurrentComp());
-        List<Pilot> pilots = pilotService.getPilots(true);
-
-        if(classFilter != null && !classFilter.isEmpty() && !classFilter.equals("global")){
-            if (classFilter.equalsIgnoreCase("FREESTYLE")) {
-                pilots = pilots.stream().filter(pilot -> Boolean.TRUE.equals(pilot.getFreestyle())).toList();
-            } else {
-                pilots = pilots.stream().filter(pilot -> pilot.getClassString().equalsIgnoreCase(classFilter)).toList();
-            }
-        }
         if (!compService.isCurrentComp()) {
             logger.debug("Redirect to newcomp page.");
             return "redirect:/newcomp";
@@ -204,6 +195,45 @@ public class RootController {
             return "redirect:/rounds";
         }
 
+        List<Pilot> pilots = pilotService.getPilots(true);
+        List<Pilot> activeCohort = pilots.stream()
+                .filter(pilot -> isPilotInActiveRoundCohort(pilot, roundToScore))
+                .toList();
+
+        List<Pilot> filteredPilots = new ArrayList<>();
+        List<String> behindPilotNames = new ArrayList<>();
+        HashMap<String, PilotScores> pilotScores = new HashMap<>();
+        for (Pilot pilot : activeCohort) {
+            PilotScores scores = pilotService.getPilotScores(pilot);
+            int pilotActiveRound = scores.getActiveRound(roundToScore.getType());
+            if (pilotActiveRound < roundToScore.getRound_num()) {
+                behindPilotNames.add(pilot.getName() + " (Round " + pilotActiveRound + ")");
+            }
+            if (pilotActiveRound == roundToScore.getRound_num()) {
+                filteredPilots.add(pilot);
+                pilotScores.put(pilot.getPrimary_id(), scores);
+            }
+        }
+
+        if (!behindPilotNames.isEmpty()) {
+            model.addAttribute("errorTitle", "RBR Round Alignment Error");
+            model.addAttribute("errorMessage", "These pilots are behind "
+                    + getRoundContextLabel(roundToScore)
+                    + ": " + String.join(", ", behindPilotNames)
+                    + ". Give this device to the Contest Director or Scorekeeper for score repair.");
+            return "error";
+        }
+
+        if (filteredPilots.isEmpty()) {
+            Map<String, Object> closeResult = roundService.closeRound(roundToScore.getRound_id());
+            if ((Boolean) closeResult.get("success")) {
+                return "redirect:/newround";
+            }
+            model.addAttribute("errorTitle", "RBR Round Close Error");
+            model.addAttribute("errorMessage", closeResult.get("message"));
+            return "error";
+        }
+
         //now get ordered list of classes for the filter dialog
         Set<String> pilot_classes = new LinkedHashSet<>();
         //build ordered list of classes from those contained in the pilots list
@@ -218,26 +248,13 @@ public class RootController {
         }
         model.addAttribute("pilotClasses", pilot_classes);
 
-        List<Pilot> filteredPilots = new ArrayList<>();
-
-        for (Pilot p : pilots) {
-            // If pilot is registered for FreeStyle then add him.
-            if ("FREESTYLE".equalsIgnoreCase(roundToScore.getType()) && Boolean.TRUE.equals(p.getFreestyle())) {
-                filteredPilots.add(p);
-            }
-            if (p.getClassString() != null && p.getClassString().equalsIgnoreCase(roundToScore.getComp_class())) {
-                filteredPilots.add(p);
-            }
-        }
-
         model.addAttribute("pilots", filteredPilots);
-
-        HashMap<String, PilotScores> pilotScores = new HashMap<>();
-        for (Pilot pilot : filteredPilots) {
-            pilotScores.put(pilot.getPrimary_id(), pilotService.getPilotScores(pilot));
-        }
         model.addAttribute("pilotScores", pilotScores);
         model.addAttribute("comp", compService.getComp());
+        model.addAttribute("activeRound", roundToScore);
+        model.addAttribute("activeRoundType", roundToScore.getType());
+        model.addAttribute("activeRoundNum", roundToScore.getRound_num());
+        model.addAttribute("activeRoundLabel", getRoundContextLabel(roundToScore));
 
         // Get settings so we can show them
         SettingDTO settings = settingService.getSettings();
@@ -511,6 +528,41 @@ public class RootController {
 
     private boolean isByRoundMode() {
         return compService.getComp() != null && "byRound".equalsIgnoreCase(compService.getComp().getScore_mode());
+    }
+
+    private boolean isPilotInActiveRoundCohort(Pilot pilot, RoundDTO round) {
+        if ("FREESTYLE".equalsIgnoreCase(round.getType())) {
+            return Boolean.TRUE.equals(pilot.getFreestyle());
+        }
+        return pilot.getClassString() != null && pilot.getClassString().equalsIgnoreCase(round.getComp_class());
+    }
+
+    private String getRoundContextLabel(RoundDTO round) {
+        String type = displayType(round.getType());
+        if ("FREESTYLE".equalsIgnoreCase(round.getType())) {
+            return type + " Round " + round.getRound_num();
+        }
+        return displayClass(round.getComp_class()) + " " + type + " Round " + round.getRound_num();
+    }
+
+    private String displayType(String type) {
+        if ("KNOWN".equalsIgnoreCase(type)) {
+            return "Known";
+        }
+        if ("UNKNOWN".equalsIgnoreCase(type)) {
+            return "Unknown";
+        }
+        if ("FREESTYLE".equalsIgnoreCase(type)) {
+            return "Freestyle";
+        }
+        return type;
+    }
+
+    private String displayClass(String compClass) {
+        if (compClass == null || compClass.isBlank()) {
+            return "";
+        }
+        return compClass.substring(0, 1).toUpperCase() + compClass.substring(1).toLowerCase();
     }
 
     private String redirectForCurrentScoringMode() throws IOException {

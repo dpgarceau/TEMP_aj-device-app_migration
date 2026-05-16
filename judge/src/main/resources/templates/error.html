@@ -61,9 +61,9 @@
 <body class="red lighten-4">
   <div class="center-align">
     <i class="material-icons error-icon red-text text-darken-3">error</i>
-    <h1 class="error-title red-text text-darken-4">ERROR</h1>
+    <h1 class="error-title red-text text-darken-4" th:text="${errorTitle} ?: 'ERROR'">ERROR</h1>
     <p class="error-message">
-      <strong>Please give this device to the Contest Director or Scorekeeper.</strong>
+      <strong th:text="${errorMessage} ?: 'Please give this device to the Contest Director or Scorekeeper.'">Please give this device to the Contest Director or Scorekeeper.</strong>
     </p>
   </div>
 

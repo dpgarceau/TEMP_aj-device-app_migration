@@ -52,35 +52,15 @@
 
         <!-- Show rounds and judge button -->
         <div style="margin-top: 20px;">
-            <h5 style="font-weight: 600; margin-bottom: 15px; text-align: center;">Next Round Number:</h5>
+            <h5 style="font-weight: 600; margin-bottom: 15px; text-align: center;" th:text="${activeRoundLabel}">Active Round</h5>
 
-            <!-- Three cards for round types -->
-            <div style="display: flex; justify-content: center; gap: 15px;">
-
-                <!-- KNOWN Card -->
-                <div style="border-bottom: 1px solid #999; padding: 5px 15px; min-width: 140px;">
-                    <div style="text-align: center; font-weight: 500; font-size: 1.1rem; color: #666;">KNOWN</div>
+            <div style="display: flex; justify-content: center;">
+                <div style="border-bottom: 1px solid #999; padding: 5px 20px; min-width: 220px;">
+                    <div style="text-align: center; font-weight: 500; font-size: 1.2rem; color: #666;" th:text="${activeRoundType}">KNOWN</div>
                     <div style="text-align: center; font-size: 1.1rem; color: #666;">
-                        Round <span style="font-weight: 700; font-size: 2rem; color: #1976d2;" th:text="${pilotScores[pilot.primary_id].getActiveRound('KNOWN')}"></span>
+                        Round <span style="font-weight: 700; font-size: 2rem; color: #1976d2;" th:text="${activeRoundNum}"></span>
                     </div>
                 </div>
-
-                <!-- UNKNOWN Card -->
-                <div style="border-bottom: 1px solid #999; padding: 5px 15px; min-width: 140px;">
-                    <div style="text-align: center; font-weight: 500; font-size: 1.1rem; color: #666;">UNKNOWN</div>
-                    <div style="text-align: center; font-size: 1.1rem; color: #666;">
-                        Round <span style="font-weight: 700; font-size: 2rem; color: #1976d2;" th:text="${pilotScores[pilot.primary_id].getActiveRound('UNKNOWN')}"></span>
-                    </div>
-                </div>
-
-                <!-- FREESTYLE Card -->
-                <div style="border-bottom: 1px solid #999; padding: 5px 15px; min-width: 140px;">
-                    <div style="text-align: center; font-weight: 500; font-size: 1.1rem; color: #666;">FREESTYLE</div>
-                    <div style="text-align: center; font-size: 1.1rem; color: #666;">
-                        Round <span style="font-weight: 700; font-size: 2rem; color: #1976d2;" th:text="${pilotScores[pilot.primary_id].getActiveRound('FREESTYLE')}"></span>
-                    </div>
-                </div>
-
             </div>
 
             <!-- Centered Judge button -->
@@ -98,7 +78,7 @@
         </div>
     </div>
     <div th:if="${#lists.isEmpty(pilots)}" class="center-align" style="margin-top: 10vh;">
-      <h4>No pilots found. Please sync pilots.</h4>
+      <h4>No pilots remain for this active round.</h4>
     </div>
 </div>
 
