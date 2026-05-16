@@ -507,8 +507,16 @@
                     if (done)
                         nextEvent(data);
                 },
-                failure: function (errMsg) {
-                    alert(errMsg);
+                error: function (errObj) {
+                    let message = 'Could not save score.';
+                    try {
+                        message = JSON.parse(errObj.responseText).message || message;
+                    } catch (e) {
+                        if (errObj.responseText) {
+                            message = errObj.responseText.substring(0, 120);
+                        }
+                    }
+                    M.toast({ html: message, classes: 'red', displayLength: 5000 });
                 }
             });
         }

@@ -148,6 +148,14 @@
                 color: #616161;
                 font-size: 0.9rem;
             }
+            .rbr-start-btn {
+                width: 100%;
+                height: 64px;
+                line-height: 64px;
+                font-size: 1.5rem;
+                font-weight: 700;
+                text-transform: none;
+            }
         </style>
 
         <!-- Battery Warning Indicator (updated via onOpenStart callback in pilot-list pages) -->
@@ -157,7 +165,7 @@
         <h6 class="black-text">Select Direction (tap to change)</h6>
         <form th:id="'judgeknown'+${pilot.index}" action="/judge" method="get">
             <input type="hidden" name="pilot_id" th:value="${pilot.primary_id}"/>
-            <input type="hidden" th:id="'roundType'+${pilot.index}" name="roundType" value="KNOWN"/>
+            <input type="hidden" th:id="'roundType'+${pilot.index}" name="roundType" th:value="${activeRoundType} ?: 'KNOWN'"/>
             <input type="hidden" th:id="'dirflip'+${pilot.index}" name="dirflip" value="false" />
             <input type="hidden" th:id="'sequenceType'+${pilot.index}" name="sequenceType" th:value="${comp.sequenceType}" />
             <div class="row">
@@ -170,9 +178,20 @@
                 </div>
             </div>
 
-            <h6 class="black-text" style="margin-top: 30px;">Touch on TYPE button to start judging</h6>
+            <h6 class="black-text" style="margin-top: 30px;"
+                th:text="${comp.score_mode == 'byRound'} ? ${activeRoundLabel} : 'Touch on TYPE button to start judging'">
+                Touch on TYPE button to start judging
+            </h6>
 
-            <div class="row">
+            <div class="row" th:if="${comp.score_mode == 'byRound'}">
+                <div class="col s12">
+                    <a th:id="'act_rbr'+${pilot.index}" class="waves-effect waves-light btn-large orange darken-1 rbr-start-btn" href="#">
+                        Start Judging
+                    </a>
+                </div>
+            </div>
+
+            <div class="row" th:if="${comp.score_mode != 'byRound'}">
                 <div class="col s4">
                     <a th:id="'act_known'+${pilot.index}" class="type-btn known-btn" href="#"
                        th:attr="data-pilot-idx=${pilot.index},data-pilot-id=${pilot.primary_id},data-max-sequences=${comp.sequences},data-active-sequence=${pilotScores[pilot.primary_id].getActiveSequence('KNOWN')}">
@@ -206,7 +225,7 @@
         </form>
 
         <!-- Incomplete KNOWN Round Warning Overlay -->
-        <div th:id="'incomplete_overlay_'+${pilot.index}" class="incomplete-overlay">
+        <div th:if="${comp.score_mode != 'byRound'}" th:id="'incomplete_overlay_'+${pilot.index}" class="incomplete-overlay">
             <h5 style="font-size: 1.6rem; font-weight: 700; margin: 0 0 15px 0; color: #e65100; text-align: center;">
                 <i class="material-icons" style="vertical-align: middle; margin-right: 8px;">warning</i>Incomplete KNOWN Round
             </h5>
@@ -240,6 +259,7 @@
                 var pilotId = /*[[${pilot.primary_id}]]*/ '';
                 var maxSequences = /*[[${comp.sequences}]]*/ 2;
                 var activeSequence = /*[[${pilotScores[pilot.primary_id].getActiveSequence('KNOWN')}]]*/ 1;
+                var scoreMode = /*[[${comp.score_mode}]]*/ 'global';
 
                 var overlay = $('#incomplete_overlay_' + pilotIdx);
                 var dirflipInput = $('#dirflip' + pilotIdx);
@@ -268,6 +288,16 @@
                 });
 
                 renderDirectionButton();
+
+                $('#act_rbr' + pilotIdx).on('click', function(e) {
+                    e.preventDefault();
+                    $('#judgeknown' + pilotIdx).submit();
+                    return false;
+                });
+
+                if (scoreMode === 'byRound') {
+                    return;
+                }
 
                 function showOverlay() {
                     overlay.addClass('active');

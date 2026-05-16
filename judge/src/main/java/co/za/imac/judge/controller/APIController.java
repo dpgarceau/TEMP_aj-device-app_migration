@@ -324,10 +324,68 @@ public class APIController {
     }
 
     @PostMapping("/api/score")
-    public PilotScores submitScores(@RequestBody PilotScoreDTO pilotScoreDTO)
+    public ResponseEntity<String> submitScores(@RequestBody PilotScoreDTO pilotScoreDTO)
             throws ParserConfigurationException, SAXException, IOException {
         System.out.println(new Gson().toJson(pilotScoreDTO));
-        return pilotService.submitScore(pilotScoreDTO);
+        Map<String, Object> guardResult = validateRbrScoreSubmission(pilotScoreDTO);
+        if (!(Boolean) guardResult.get("success")) {
+            return new ResponseEntity<>(new Gson().toJson(guardResult), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(new Gson().toJson(pilotService.submitScore(pilotScoreDTO)), HttpStatus.OK);
+    }
+
+    private Map<String, Object> validateRbrScoreSubmission(PilotScoreDTO pilotScoreDTO)
+            throws ParserConfigurationException, SAXException, IOException {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", Boolean.TRUE);
+
+        CompDTO comp = compService.getComp();
+        if (comp == null || !"byRound".equalsIgnoreCase(comp.getScore_mode())) {
+            return result;
+        }
+
+        RoundDTO activeRound = roundsService.getScoringRound();
+        if (activeRound == null) {
+            return scoreGuardFailure("No active RBR round is available.");
+        }
+
+        if (pilotScoreDTO.getType() == null || !pilotScoreDTO.getType().equalsIgnoreCase(activeRound.getType())) {
+            return scoreGuardFailure("Submitted score type does not match the active RBR round.");
+        }
+
+        if (pilotScoreDTO.getRound() != activeRound.getRound_num()) {
+            return scoreGuardFailure("Submitted score round does not match the active RBR round.");
+        }
+
+        Pilot pilot = pilotService.getPilot(pilotScoreDTO.getPrimary_id());
+        if (pilot == null || !Boolean.TRUE.equals(pilot.getActive())) {
+            return scoreGuardFailure("Submitted pilot is not active for this RBR round.");
+        }
+
+        if (!isPilotInActiveRoundCohort(pilot, activeRound)) {
+            return scoreGuardFailure("Submitted pilot is not in the active RBR cohort.");
+        }
+
+        PilotScores pilotScores = pilotService.getPilotScores(pilot);
+        if (pilotScores.getActiveRound(activeRound.getType()) != activeRound.getRound_num()) {
+            return scoreGuardFailure("Submitted pilot is not ready for the active RBR round.");
+        }
+
+        return result;
+    }
+
+    private Map<String, Object> scoreGuardFailure(String message) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", Boolean.FALSE);
+        result.put("message", message);
+        return result;
+    }
+
+    private boolean isPilotInActiveRoundCohort(Pilot pilot, RoundDTO round) {
+        if ("FREESTYLE".equalsIgnoreCase(round.getType())) {
+            return Boolean.TRUE.equals(pilot.getFreestyle());
+        }
+        return pilot.getClassString() != null && pilot.getClassString().equalsIgnoreCase(round.getComp_class());
     }
 
     @GetMapping("/api/settings")
