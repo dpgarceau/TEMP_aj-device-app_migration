@@ -61,6 +61,13 @@
       color: #263238;
       margin: 0 0 12px;
     }
+    .repair-tile {
+      border-color: #ef6c00;
+      background: #fff3e0;
+    }
+    .repair-action {
+      margin-top: 8px;
+    }
   </style>
 </head>
 
@@ -81,6 +88,21 @@
       </div>
 
       <p class="event-line" th:text="${compName}"></p>
+
+      <div class="admin-tile repair-tile" th:if="${activeRoundLabel != null}">
+        <div class="admin-tile-title">Active Round Repair</div>
+        <div class="admin-tile-text">
+          Clear mistaken active round: <strong th:text="${activeRoundLabel}"></strong>
+        </div>
+        <div class="admin-tile-text">
+          Only works if no scores exist for this round.
+        </div>
+        <div class="repair-action">
+          <a href="#clearActiveRoundModal" class="waves-effect waves-light btn orange darken-2 modal-trigger">
+            Clear Active Round
+          </a>
+        </div>
+      </div>
 
       <a href="/admin/comp" class="admin-tile-link">
         <div class="admin-tile">
@@ -106,9 +128,52 @@
     </div>
   </div>
 
+  <div id="clearActiveRoundModal" class="modal">
+    <div class="modal-content">
+      <h5>Clear Active Round?</h5>
+      <p style="font-size: 1.2rem;">
+        This is only for a mistaken round start before any pilot has flown or been scored.
+      </p>
+      <p style="font-size: 1.2rem; color: #c62828;">
+        If any scores exist, this action will be blocked.
+      </p>
+    </div>
+    <div class="modal-footer" style="text-align: center;">
+      <a href="#!" class="modal-close waves-effect waves-red btn-flat">Cancel</a>
+      <a href="#!" id="confirmClearActiveRound" class="waves-effect waves-light btn orange darken-2">Clear Round</a>
+    </div>
+  </div>
+
   <!--  Scripts-->
   <script src="/jquery-3.6.4.min.js"></script>
   <script src="/materialize/js/materialize.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      M.Modal.init(document.querySelectorAll('.modal'));
+    });
+
+    $('#confirmClearActiveRound').on('click', function (e) {
+      e.preventDefault();
+      $.ajax({
+        type: 'POST',
+        url: '/api/rounds/active/clear',
+        dataType: 'json',
+        success: function () {
+          M.toast({ html: 'Active round cleared', classes: 'green', displayLength: 2000 });
+          setTimeout(function () {
+            window.location.replace('/newround');
+          }, 1000);
+        },
+        error: function (errObj) {
+          let message = 'Could not clear active round.';
+          if (errObj.responseJSON && errObj.responseJSON.message) {
+            message = errObj.responseJSON.message;
+          }
+          M.toast({ html: message, classes: 'red', displayLength: 5000 });
+        }
+      });
+    });
+  </script>
 
 </body>
 

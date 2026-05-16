@@ -301,6 +301,38 @@ public class APIController {
         return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.OK);
     }
 
+    @PostMapping("/api/rounds/active/clear")
+    public ResponseEntity<String> clearActiveRound()
+            throws IOException, ParserConfigurationException, SAXException {
+        Map<String, Object> result = new HashMap<>();
+
+        RoundDTO activeRound = roundsService.getScoringRound();
+        if (activeRound == null) {
+            result.put("result", "fail");
+            result.put("message", "No active round to clear.");
+            return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.BAD_REQUEST);
+        }
+
+        List<String> scoredPilots = getPilotsWithScoresForRound(activeRound);
+        if (!scoredPilots.isEmpty()) {
+            result.put("result", "fail");
+            result.put("message", "Cannot clear this round because scores already exist for: "
+                    + String.join(", ", scoredPilots));
+            return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.CONFLICT);
+        }
+
+        Map<String, Object> clearResult = roundsService.clearActiveRound(activeRound.getRound_id());
+        if ((Boolean) clearResult.get("success")) {
+            result.put("result", "ok");
+            result.put("message", clearResult.get("message"));
+            return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.OK);
+        }
+
+        result.put("result", "fail");
+        result.put("message", clearResult.get("message"));
+        return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @GetMapping("/api/pilots/sync")
     public String syncPilots() throws IOException, ParserConfigurationException, SAXException {
         // fetch pilots
@@ -386,6 +418,24 @@ public class APIController {
             return Boolean.TRUE.equals(pilot.getFreestyle());
         }
         return pilot.getClassString() != null && pilot.getClassString().equalsIgnoreCase(round.getComp_class());
+    }
+
+    private List<String> getPilotsWithScoresForRound(RoundDTO round)
+            throws ParserConfigurationException, SAXException, IOException {
+        List<String> scoredPilots = new ArrayList<>();
+        for (Pilot pilot : pilotService.getPilots(false)) {
+            if (!isPilotInActiveRoundCohort(pilot, round)) {
+                continue;
+            }
+            PilotScores pilotScores = pilotService.getPilotScores(pilot);
+            for (PScore score : pilotScores.getScores()) {
+                if (round.getType().equalsIgnoreCase(score.getType()) && score.getRound() == round.getRound_num()) {
+                    scoredPilots.add(pilot.getName());
+                    break;
+                }
+            }
+        }
+        return scoredPilots;
     }
 
     @GetMapping("/api/settings")

@@ -166,6 +166,45 @@ public class RoundsService {
         return res;
     }
 
+    public Map<String, Object> clearActiveRound(Integer i) {
+        Map<String, Object> res = new HashMap<String, Object>();
+        if (i == null) {
+            res.put("message", "You must supply a round ID.");
+            res.put("success", Boolean.FALSE);
+            logger.error((String) res.get("message"));
+            return res;
+        }
+
+        RoundDTO scoringRound = this.getScoringRound();
+        if (scoringRound == null || !i.equals(scoringRound.getRound_id())) {
+            res.put("message", "This is not the active round.");
+            res.put("success", Boolean.FALSE);
+            logger.error((String) res.get("message"));
+            return res;
+        }
+
+        boolean removed = this.roundsDTO.getRounds().removeIf(rnd -> i.equals(rnd.getRound_id()));
+        if (!removed) {
+            res.put("message", "Could not find active round record.");
+            res.put("success", Boolean.FALSE);
+            logger.error((String) res.get("message"));
+            return res;
+        }
+
+        this.roundsDTO.setScoringRoundNum(null);
+        if (!saveRoundsToFile()) {
+            res.put("message", "Could not save cleared round state.");
+            res.put("success", Boolean.FALSE);
+            logger.error((String) res.get("message"));
+            return res;
+        }
+
+        res.put("message", "Cleared active round " + i);
+        res.put("success", Boolean.TRUE);
+        logger.info((String) res.get("message"));
+        return res;
+    }
+
 
     public boolean isScoringRound() throws IOException {
         // There are rounds set to 'F'.

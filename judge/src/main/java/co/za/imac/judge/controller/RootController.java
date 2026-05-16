@@ -520,6 +520,8 @@ public class RootController {
         SettingDTO settings = settingService.getSettings();
         model.addAttribute("settings", settings);
         model.addAttribute("compName", compService.getComp().getComp_name());
+        RoundDTO activeRound = roundService.getScoringRound();
+        model.addAttribute("activeRoundLabel", activeRound == null ? null : getRoundContextLabel(activeRound));
         return "admin";
     }
 
