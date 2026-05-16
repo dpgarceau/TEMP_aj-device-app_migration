@@ -6,100 +6,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0" />
   <title>New Round</title>
 
-  <!-- CSS  -->
   <link href="materialize/css/material_lcons.css" rel="stylesheet">
   <link href="materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
-  <link href="materialize/css/nouislider.css" type="text/css" rel="stylesheet" />
   <style>
+    body {
+      height: 100vh;
+      overflow: hidden;
+    }
 
-    .row {
-      margin-bottom: 5px;
-      margin-top: 5px;
+    .page-shell {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 12px 12px;
     }
 
     .heading {
-      font-size: calc(2vw + 3vh) !important;
-      margin-bottom: 10px;
-      margin-top: 5px;
+      font-size: calc(1.8vw + 2.8vh) !important;
+      margin: 0 0 8px;
+      font-weight: 600;
     }
 
-    .dropdown-trigger,
-    .dropdown-content li>span,
-    .input-field label input,
-    label.lever {
-      color: #000000;
-      font-size: calc(1vw + 2vh) !important;
+    .step-title {
+      font-size: calc(1.1vw + 2vh);
+      margin: 4px 0 10px;
+      font-weight: 500;
     }
 
-    .select-dropdown
-
-    .switch label input[type=checkbox]:checked+.lever:after {
-      background-color: #26a69a;
-    }
-    .switch label input[type=checkbox]+.lever:after {
-      background-color: #26a69a;
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
     }
 
-    @font-face {
-      font-family: digitalFont;
-      src: url(font/digital-7.ttf);
+    .round-button {
+      min-height: 74px;
+      height: auto;
+      line-height: 1.15;
+      padding: 10px;
+      font-size: calc(1vw + 2vh);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: none;
+      white-space: normal;
+    }
+
+    .round-button small {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-top: 4px;
+    }
+
+    .panel {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .confirm-box {
+      border: 2px solid #2e7d32;
+      padding: 14px;
+      background: #e8f5e9;
+      margin-bottom: 12px;
+    }
+
+    .confirm-title {
+      font-size: calc(1.4vw + 2.4vh);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .confirm-row {
+      font-size: calc(.9vw + 1.8vh);
+      margin: 5px 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .actions .btn-large {
+      min-width: 150px;
+      font-size: 1.2rem;
+      text-transform: none;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 
 <body class="yellow">
-<div class="section no-pad-bot yellow" id="index-banner">
-  <div class="container yellow black-text">
-    <div class="row">
-      <div class="col s12"><h2 class="heading">New Round</h2></div>
+<div class="page-shell yellow black-text">
+  <h2 class="heading center-align">Round-by-Round Scoring Mode</h2>
+
+  <div id="emptyPanel" class="panel center-align hidden">
+    <div class="step-title">No available round can be started.</div>
+    <p>Check active pilots, schedules, and round alignment from Admin.</p>
+  </div>
+
+  <div id="familyPanel" class="panel hidden">
+    <div class="step-title center-align">Select Round Family</div>
+    <div class="button-grid">
+      <a href="#" id="precisionBtn" class="waves-effect waves-light btn-large blue darken-1 round-button">
+        Precision
+      </a>
+      <a href="#" id="freestyleBtn" class="waves-effect waves-light btn-large purple darken-1 round-button">
+        Freestyle
+      </a>
     </div>
-    <div class="row center">
-      <div class="input-field col s4">
-        <select id="class_sel" class="schedFilter">
-          <option value="" disabled selected>Choose Class</option>
-          <option value="BASIC">Basic</option>
-          <option value="SPORTSMAN">Sportsman</option>
-          <option value="INTERMEDIATE">Intermediate</option>
-          <option value="ADVANCED">Advanced</option>
-          <option value="UNLIMITED">Unlimited</option>
-        </select>
-        <label class="black-text">Class</label>
-      </div>
-      <div class="input-field col s4">
-        <select id="type_sel" class="schedFilter">
-          <option value="" disabled selected>Choose Type</option>
-          <option value="KNOWN">Known</option>
-          <option value="UNKNOWN">Unknown</option>
-          <option value="FREESTYLE">Freestyle</option>
-        </select>
-        <label class="black-text">Round Type</label>
-      </div>
+  </div>
+
+  <div id="classPanel" class="panel hidden">
+    <div class="step-title center-align">Select Class</div>
+    <div id="classButtons" class="button-grid"></div>
+  </div>
+
+  <div id="typePanel" class="panel hidden">
+    <div class="step-title center-align">Select Type</div>
+    <div id="typeButtons" class="button-grid"></div>
+  </div>
+
+  <div id="confirmPanel" class="panel hidden">
+    <div class="confirm-box">
+      <div class="confirm-title center-align" id="confirmTitle"></div>
+      <div class="confirm-row"><strong>Round:</strong> <span id="confirmRound"></span></div>
+      <div class="confirm-row"><strong>Schedule:</strong> <span id="confirmSchedule"></span></div>
+      <div class="confirm-row"><strong>Pilots:</strong> <span id="confirmPilots"></span></div>
+      <div class="confirm-row"><strong>Sequence Count:</strong> <span id="confirmSequences"></span></div>
     </div>
-    <div class="row center">
-      <div class="input-field col s12">
-        <select id="sched_sel" disabled>
-          <option value="" disabled selected>Select Type and/or Class</option>
-        </select>
-        <label class="black-text">Schedule</label>
-      </div>
+    <div class="actions">
+      <a href="#" id="backBtn" class="waves-effect waves-light btn-large grey darken-1">Reselect</a>
+      <a href="#" id="startRoundBtn" class="waves-effect waves-light btn-large green darken-1">Start Round</a>
     </div>
-    <div class="row center">
-      <div class="col s12 switch center">
-        <label class="black-text">Sequence Count</label><br>
-        <label class="light black-text lever">
-          Single
-          <input type="checkbox" id="seqs">
-          <span class="lever black"></span>
-          Double
-        </label>
-      </div>
-    </div>
-    <div class="row center">
-      <a href="#" id="createRound" class="waves-effect waves-light btn orange darken-1 pulse">Save Round</a>
-    </div>
-    <br>
   </div>
 </div>
+
 <div class="fixed-action-btn">
   <a class="btn-floating btn-large red">
     <i class="large material-icons">menu</i>
@@ -109,105 +156,197 @@
   </ul>
 </div>
 
-
-<!--  Scripts-->
 <script src="jquery-3.6.4.min.js"></script>
 <script src="materialize/js/materialize.js"></script>
 <script th:inline="javascript">
   /*<![CDATA[*/
   M.AutoInit();
 
-  const rounds = /*[[${rounds}]]*/ ;
-  const schedules = /*[[${schedules}]]*/ ;
+  const roundOptions = /*[[${roundOptions}]]*/ [];
+  const classOrder = ['BASIC', 'SPORTSMAN', 'INTERMEDIATE', 'ADVANCED', 'UNLIMITED', 'INVITATIONAL'];
+  let selectedFamily = null;
+  let selectedClass = null;
+  let selectedOption = null;
 
-  $('.schedFilter').change(function () {
-    if (this.id === "type_sel" && $('#type_sel').val() === 'FREESTYLE') {
-      $('#class_sel').attr('disabled', true);
-    } else {
-      $('#class_sel').attr('disabled', false);
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!roundOptions || roundOptions.length === 0) {
+      showPanel('emptyPanel');
+      return;
     }
-    M.FormSelect.init(document.querySelectorAll('#class_sel'));
 
-    $('#sched_sel').attr('disabled',true);
-    $('#sched_sel').find('option').remove().end()
-            .append('<option value="" disabled selected>Select Type and/or Class</option>');
-    M.FormSelect.init(document.querySelectorAll('#sched_sel'));
+    const hasPrecision = roundOptions.some(option => option.family === 'Precision');
+    const hasFreestyle = roundOptions.some(option => option.family === 'Freestyle');
 
-    if ( $('#type_sel').val() === 'FREESTYLE' || ($('#type_sel').val() !== null && $('#class_sel').val() !== null) ) {
-      // User selected freestyle type or a class+type.
-      buildScheduleSelect($('#type_sel').val(), $('#class_sel').val());
+    if (hasPrecision && hasFreestyle) {
+      showPanel('familyPanel');
+    } else if (hasFreestyle) {
+      selectFamily('Freestyle');
+    } else {
+      selectFamily('Precision');
     }
   });
 
-  function buildScheduleSelect(typeSel, classSel) {
-    //var typeSel = $('#type_sel').val();
-    //var classSel = $('#class_sel').val()
-    console.log("Building Schedule Selection for " + classSel + " " + typeSel);
+  $('#precisionBtn').on('click', function (e) {
+    e.preventDefault();
+    selectFamily('Precision');
+  });
 
-    $('#sched_sel').attr('disabled',false);
-    $('#sched_sel').find('option').remove().end();
+  $('#freestyleBtn').on('click', function (e) {
+    e.preventDefault();
+    selectFamily('Freestyle');
+  });
 
-    // Iterate through schedules and just add the right ones.
-    for (let schedIndex in schedules) {
-      //console.log(schedIndex + ": "+ schedules[schedIndex]["comp_class"] + " - " + schedules[schedIndex]["type"]);
-      if (typeSel === "FREESTYLE" && schedules[schedIndex]["type"] === "FREESTYLE") {
-        addOptionToSchedSel($('#sched_sel'), schedules[schedIndex], schedIndex)
-        //$('#sched_sel').append('<option value="' + schedIndex + '">' + schedules[schedIndex]["comp_class"] + ' - ' + schedules[schedIndex]["type"] + '(' + schedules[schedIndex]["description"] + ')' + '</option>');
-      } else if ( (typeSel === schedules[schedIndex]["type"]) && (classSel === schedules[schedIndex]["comp_class"]) ) {
-        addOptionToSchedSel($('#sched_sel'), schedules[schedIndex], schedIndex)
-      }
-    }
-    M.FormSelect.init(document.querySelectorAll('#sched_sel'));
-  }
-
-  function addOptionToSchedSel(sel, schedule, schedIndex) {
-    if (schedule["description"] === "") {
-      sel.append('<option value="' + schedIndex + '">' + schedule["comp_class"] + ' - ' + schedule["type"] + '</option>');
+  $('#backBtn').on('click', function (e) {
+    e.preventDefault();
+    selectedOption = null;
+    if (selectedFamily === 'Precision') {
+      showClassSelection();
     } else {
-      sel.append('<option value="' + schedIndex + '">' + schedule["description"] + '</option>');
+      showPanel('familyPanel');
     }
-  }
+  });
 
-
-  $("#createRound").click(function () {
-
-    var seqs = $("#seqs").attr('checked') ? 2 : 1;
+  $('#startRoundBtn').on('click', function (e) {
+    e.preventDefault();
+    if (!selectedOption) {
+      return;
+    }
 
     $.ajax({
-      type: "POST",
-      url: "/api/rounds",
-      // The key needs to match your method's input parameter (case-sensitive).
-      data: JSON.stringify(
-        {
-          type: $("#type_sel").val(),
-          comp_class: $("#class_sel").val(),
-          sched_id: $("#sched_sel").val(),
-          sched_desc: $("#sched_sel option:selected").text(),
-          seqs: seqs
-        }
-      ),
-      contentType: "application/json; charset=utf-8",
-      dataType: "json",
-      success: function (data) {
-        console.log(data.result + ":" + data.message);
-        newRound = JSON.parse(data.new_round);
-        M.toast({ html: 'Round ' + newRound.round_id + " created."})
-        location.replace("/rounds");
+      type: 'POST',
+      url: '/api/rounds',
+      data: JSON.stringify({
+        type: selectedOption.type,
+        comp_class: selectedOption.compClass,
+        round_num: selectedOption.roundNum,
+        sched_id: String(selectedOption.schedId),
+        sched_desc: selectedOption.schedDesc,
+        sequences: selectedOption.sequences
+      }),
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json',
+      success: function () {
+        window.location.replace('/pilot-list-round');
       },
       error: function (err) {
+        let message = 'Could not start round.';
         try {
-          // If we were able to return a proper JSON Object, get the message from there.
-          M.toast({ html: 'Add round error: ' + JSON.parse(err.responseText).message})
-        } catch {
-          // Otherwise just use the default jquery way...
-          console.log("There was an error in the ajax operation: " + err.statusText);
-          console.log("ResponseText: " + err.responseText);
-          M.toast({ html: 'Add round error: ' + err.responseText.substring(0, 80)})
+          message = JSON.parse(err.responseText).message || message;
+        } catch (e) {
+          if (err.responseText) {
+            message = err.responseText.substring(0, 80);
+          }
         }
-      },
-      complete: function() {}
+        M.toast({ html: message, classes: 'red', displayLength: 4000 });
+      }
     });
   });
+
+  function selectFamily(family) {
+    selectedFamily = family;
+    selectedClass = null;
+
+    if (family === 'Freestyle') {
+      const option = roundOptions.find(roundOption => roundOption.family === 'Freestyle');
+      showConfirmation(option);
+      return;
+    }
+
+    showClassSelection();
+  }
+
+  function showClassSelection() {
+    const classes = uniqueValues(roundOptions
+      .filter(option => option.family === 'Precision')
+      .map(option => option.compClass))
+      .sort((a, b) => classSortIndex(a) - classSortIndex(b));
+
+    const container = $('#classButtons');
+    container.empty();
+
+    classes.forEach(function (className) {
+      $('<a href="#" class="waves-effect waves-light btn-large teal darken-1 round-button"></a>')
+        .text(displayClass(className))
+        .on('click', function (e) {
+          e.preventDefault();
+          selectClass(className);
+        })
+        .appendTo(container);
+    });
+
+    showPanel('classPanel');
+  }
+
+  function selectClass(className) {
+    selectedClass = className;
+    const options = roundOptions.filter(option =>
+      option.family === 'Precision' && option.compClass === className);
+
+    if (options.length === 1) {
+      showConfirmation(options[0]);
+      return;
+    }
+
+    const container = $('#typeButtons');
+    container.empty();
+
+    options.forEach(function (option) {
+      $('<a href="#" class="waves-effect waves-light btn-large orange darken-1 round-button"></a>')
+        .html(displayType(option.type) + '<small>Round ' + option.roundNum + '</small>')
+        .on('click', function (e) {
+          e.preventDefault();
+          showConfirmation(option);
+        })
+        .appendTo(container);
+    });
+
+    showPanel('typePanel');
+  }
+
+  function showConfirmation(option) {
+    selectedOption = option;
+    const title = option.family === 'Freestyle'
+      ? 'Freestyle'
+      : displayClass(option.compClass) + ' ' + displayType(option.type);
+
+    $('#confirmTitle').text(title);
+    $('#confirmRound').text(option.roundNum);
+    $('#confirmSchedule').text(option.schedDesc);
+    $('#confirmPilots').text(option.pilotCount);
+    $('#confirmSequences').text(option.sequences);
+    showPanel('confirmPanel');
+  }
+
+  function showPanel(panelId) {
+    $('.panel').addClass('hidden');
+    $('#' + panelId).removeClass('hidden');
+  }
+
+  function uniqueValues(values) {
+    return values.filter((value, index, self) => value && self.indexOf(value) === index);
+  }
+
+  function classSortIndex(className) {
+    const index = classOrder.indexOf(className);
+    return index === -1 ? classOrder.length : index;
+  }
+
+  function displayClass(className) {
+    if (!className) {
+      return '';
+    }
+    return className.charAt(0).toUpperCase() + className.slice(1).toLowerCase();
+  }
+
+  function displayType(type) {
+    if (type === 'KNOWN') {
+      return 'Known';
+    }
+    if (type === 'UNKNOWN') {
+      return 'Unknown';
+    }
+    return 'Freestyle';
+  }
 
   /*]]>*/
 </script>

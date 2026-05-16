@@ -6,6 +6,7 @@ import co.za.imac.judge.utils.ContestClasses;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -426,6 +427,7 @@ public class RootController {
         // We need to send the list of rounds and available schedules to the page.
         model.addAttribute("rounds", roundService.getRounds());
         model.addAttribute("schedules", scheduleService.getSchedules());
+        model.addAttribute("roundOptions", buildRoundOptions());
         logger.debug("Schedule Count: " + scheduleService.getSchedules().size());
         return "newround";
     }
@@ -529,5 +531,132 @@ public class RootController {
             return "redirect:/rounds";
         }
         return "redirect:/pilot-list-global";
+    }
+
+    private List<Map<String, Object>> buildRoundOptions() throws IOException {
+        List<Map<String, Object>> roundOptions = new ArrayList<>();
+        List<Pilot> activePilots;
+        try {
+            activePilots = pilotService.getPilots(true);
+        } catch (ParserConfigurationException | SAXException e) {
+            throw new IOException("Could not load pilots for round selection.", e);
+        }
+
+        Set<String> activeClasses = new LinkedHashSet<>();
+        for (String className : ContestClasses.ORDER) {
+            if (activePilots.stream().anyMatch(pilot -> className.equalsIgnoreCase(pilot.getClassString()))) {
+                activeClasses.add(className);
+            }
+        }
+
+        for (String className : activeClasses) {
+            addPrecisionRoundOption(roundOptions, activePilots, className, "KNOWN");
+            addPrecisionRoundOption(roundOptions, activePilots, className, "UNKNOWN");
+        }
+
+        if (activePilots.stream().anyMatch(pilot -> Boolean.TRUE.equals(pilot.getFreestyle()))) {
+            addFreestyleRoundOption(roundOptions, activePilots);
+        }
+
+        return roundOptions;
+    }
+
+    private void addPrecisionRoundOption(List<Map<String, Object>> roundOptions, List<Pilot> activePilots,
+            String className, String type) throws IOException {
+        List<Pilot> cohort = activePilots.stream()
+                .filter(pilot -> className.equalsIgnoreCase(pilot.getClassString()))
+                .toList();
+        if (cohort.isEmpty()) {
+            return;
+        }
+
+        Integer roundNum = getAlignedRoundNum(cohort, type);
+        ScheduleDTO schedule = roundNum == null ? null : scheduleService.getScheduleForRound(className, type, roundNum);
+        if (schedule == null) {
+            return;
+        }
+
+        roundOptions.add(createRoundOption("Precision", className, type, roundNum, schedule, cohort.size()));
+    }
+
+    private void addFreestyleRoundOption(List<Map<String, Object>> roundOptions, List<Pilot> activePilots)
+            throws IOException {
+        List<Pilot> cohort = activePilots.stream()
+                .filter(pilot -> Boolean.TRUE.equals(pilot.getFreestyle()))
+                .toList();
+        if (cohort.isEmpty()) {
+            return;
+        }
+
+        Integer roundNum = getAlignedRoundNum(cohort, "FREESTYLE");
+        ScheduleDTO schedule = roundNum == null ? null : scheduleService.getScheduleForRound("FREESTYLE", "FREESTYLE", roundNum);
+        if (schedule == null) {
+            return;
+        }
+
+        roundOptions.add(createRoundOption("Freestyle", null, "FREESTYLE", roundNum, schedule, cohort.size()));
+    }
+
+    private Integer getAlignedRoundNum(List<Pilot> cohort, String type) throws IOException {
+        Integer roundNum = null;
+        for (Pilot pilot : cohort) {
+            int pilotRound = pilotService.getPilotScores(pilot).getActiveRound(type);
+            if (roundNum == null) {
+                roundNum = pilotRound;
+            } else if (roundNum != pilotRound) {
+                logger.warn("RBR {} cohort is not aligned for {}. Expected round {}, found {} for {}.",
+                        type, pilot.getClassString(), roundNum, pilotRound, pilot.getName());
+                return null;
+            }
+        }
+        return roundNum;
+    }
+
+    private Map<String, Object> createRoundOption(String family, String compClass, String type, Integer roundNum,
+            ScheduleDTO schedule, int pilotCount) {
+        Map<String, Object> option = new HashMap<>();
+        option.put("family", family);
+        option.put("compClass", compClass);
+        option.put("type", type);
+        option.put("roundNum", roundNum);
+        option.put("schedId", findScheduleId(schedule));
+        option.put("schedDesc", getScheduleDescription(schedule, compClass, type));
+        option.put("sequences", getSequenceCount(type));
+        option.put("sequenceCount", schedule.getFigures() == null ? 0 : schedule.getFigures().size());
+        option.put("pilotCount", pilotCount);
+        return option;
+    }
+
+    private Integer findScheduleId(ScheduleDTO targetSchedule) {
+        for (Map.Entry<Integer, ScheduleDTO> entry : scheduleService.getSchedules().entrySet()) {
+            if (entry.getValue() == targetSchedule) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    private String getScheduleDescription(ScheduleDTO schedule, String compClass, String type) {
+        if (schedule.getDescription() != null && !schedule.getDescription().isBlank()) {
+            return schedule.getDescription();
+        }
+        if (schedule.getShort_desc() != null && !schedule.getShort_desc().isBlank()) {
+            return schedule.getShort_desc();
+        }
+        if (compClass == null) {
+            return type;
+        }
+        return compClass + " " + type;
+    }
+
+    private int getSequenceCount(String type) {
+        CompDTO comp = compService.getComp();
+        if ("KNOWN".equalsIgnoreCase(type)) {
+            return comp.getSequences();
+        }
+        if ("UNKNOWN".equalsIgnoreCase(type)) {
+            return comp.getUnknown_sequences();
+        }
+        return 1;
     }
 }
