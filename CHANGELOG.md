@@ -4,6 +4,58 @@ All notable changes to the AeroJudge App will be documented in this file.
 
 ---
 
+## [Unreleased] - rbr-overhaul
+
+### Added
+
+- **Round-by-Round scoring mode**: New active-round workflow for judge boxes. In By Round
+  mode, `/` sends judges to `/newround` when no round is active, and to
+  `/pilot-list-round` while a round is being judged.
+- **RBR round selection** (`/newround`): Touch-first flow for selecting Precision/Freestyle,
+  class, Known/Unknown type, and final confirmation before creating the active round.
+  Choices are built from loaded pilot and schedule data; unavailable round choices are hidden.
+- **Active round persistence**: Active RBR round state is saved and restored so the device
+  returns to the correct judging workflow after navigation or restart.
+- **RBR pilot queue** (`/pilot-list-round`): Shows only pilots in the active round cohort and
+  hides pilots once their active round score is complete.
+- **Round completion flow** (`/round-complete`): Clear completion state after an active RBR
+  cohort is finished, with the next action returning to round selection.
+- **Active Round Repair** (`/admin`): Admin landing tile for clearing a mistaken unscored
+  active round. The tile only appears when an active round exists and no scores have been
+  recorded for that round.
+
+### Changed
+
+- **RBR start modal**: By Round mode now uses the existing judge-start modal but locks it to
+  the active round. Global mode still shows KNO/UNK/FREE choices; RBR shows the active round
+  label and a single Start Judging action.
+- **RBR carousel cleanup**: Active-round pilot carousel now follows the global pilot-list
+  pattern more closely, showing one active round card instead of duplicate round text.
+- **RBR modal sizing**: RBR pilot-list modals now use the same modal sizing rules as Global
+  pilot-list modals.
+- **Score-save failure feedback**: The shared judge scoring page now uses the correct jQuery
+  `error` callback and shows a red toast when `/api/score` fails. This replaces an older
+  `failure` callback path that did not reliably surface save errors.
+- **Flightline cleanup**: Removed flightline round-switching UI from admin/device setup pages
+  as part of the RBR workflow cleanup.
+
+### Fixed
+
+- **Wrong-round score guard**: RBR score submissions are checked against the active round
+  context before saving, preventing a judge box from silently saving scores to the wrong
+  round.
+- **Behind-pilot guard**: If any pilot in the active RBR cohort is behind the active round,
+  judging stops and the error page lists the affected pilot names and their current round,
+  directing the device to the Contest Director or Scorekeeper for needed score edits.
+- **New event reset**: Loading a new event clears persisted round state so an old active
+  round cannot leak into the next competition.
+
+The RBR implementation is split across small commits for state persistence, routing guards,
+round selection, active queue filtering, score submission guarding, completion, admin repair,
+flightline cleanup, event reset, and field UX polish.
+
+---
+
 ## [Unreleased] - admin-pages-overhaul
 
 ### Added
