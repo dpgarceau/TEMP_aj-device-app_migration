@@ -35,7 +35,7 @@ public class InfoCollectorService {
 
     public InfoJson collectInfo() {
         InfoJson info = new InfoJson();
-        info.setAppName("AeroJudge App");
+        info.setAppName("AeroJudge Device");
         info.setAppVersion(com.aerojudge.judge.JudgeApplication.getAppVersion());
 
         List<InfoLine> lines = new ArrayList<>();

@@ -256,7 +256,7 @@
               url: "/api/getinfo",
               success: function (data) {
               document.getElementById('stsmsg').classList.add('hidden'); //hide this once we have data
-              document.getElementById('appName').textContent = data.appName || 'AeroJudge App';
+              document.getElementById('appName').textContent = data.appName || 'AeroJudge Device';
               document.getElementById('appVersion').textContent = 'v' + (data.appVersion || '?');
 
               const lines = data.info_lines || [];

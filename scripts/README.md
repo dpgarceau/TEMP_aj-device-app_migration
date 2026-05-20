@@ -1,4 +1,4 @@
-# Aerojudge Bootstrap Script Install
+# AeroJudge Device App Bootstrap Script Install
 
 1. Using the Raspberry Pi Imager available from the Raspberry site write the Raspberry Pi OS (32-bit) Desktop version to the SD card. Configure the relevant WiFi details, enable SSH and setup the user name judge (required) and password
 	- username : judge
@@ -21,17 +21,17 @@ chmod +x LCD35B-show-V2
 5. Now run the following commands
 ```
 cd /home/judge
-wget -O judge_setup.sh https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/judge_setup.sh
+wget -O judge_setup.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge_setup.sh
 chmod +x judge_setup.sh
 ./judge_setup.sh
 ```
 <br>
 
-6. Once the script is complete and the system is rebooted it will take about 2min for AeroJudge to start, then you should be able to browse to **http://rPI-IP:8080** from your PC or if your screen is connected, you should see AeroJudge loaded.
+6. Once the script is complete and the system is rebooted it will take about 2min for AeroJudge Device App to start, then you should be able to browse to **http://rPI-IP:8080** from your PC or if your screen is connected, you should see AeroJudge Device App loaded.
 <br>
 <br>
 
-# Aerojudge Setup From Pre Built SD
+# AeroJudge Device App Setup From Pre Built SD
 
 1. Using the Raspberry Pi Imager write the Raspberry Pi OS (32-bit) to the SD card.
    <br>
@@ -60,7 +60,7 @@ chmod +x judge_setup.sh
 	<br>	
 
 
-# Aerojudge Setup From Scratch
+# AeroJudge Device App Setup From Scratch
 
 The purpose of this document is to set out the process to the build a Raspberry PI judging unit from ground up. This document assumes that you are familiar with basic linux commands and SSH access into a linux terminal.
 
@@ -127,7 +127,7 @@ _Note: The < > brackets are not part of the file - they only indicate these are 
    sudo apt autoremove -y
    ```
    <br>
-9. Here we are going to configure the boot options to auto login to the desktop so that the judge app will auto load
+9. Here we are going to configure the boot options to auto login to the desktop so that AeroJudge Device App will auto load
    ```
    sudo raspi-config
    # 1 System Options --> S5 Boot / Auto Login --> B4 Desktop Autologin — Desktop GUI --> automatically logged in as ‘judge’ user:
@@ -237,7 +237,7 @@ _Note: The < > brackets are not part of the file - they only indicate these are 
         
 	```
 
-18. Reboot : On the first boot the Judge-App will attempt to connect to Score and retrieve the current Pilots and Sequences, you will need to run Score create a comp and enable the service in the services tab with the correct port. You can also from you PC once the PI has rebooted browse to http://PI-IP:8080/newcomp
+18. Reboot : On the first boot AeroJudge Device App will attempt to connect to Score and retrieve the current Pilots and Sequences, you will need to run Score create a comp and enable the service in the services tab with the correct port. You can also from you PC once the PI has rebooted browse to http://PI-IP:8080/newcomp
     ```
 	sudo reboot
 	```

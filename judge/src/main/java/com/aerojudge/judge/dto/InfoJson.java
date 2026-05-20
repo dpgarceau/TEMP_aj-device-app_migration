@@ -10,7 +10,7 @@ public class InfoJson {
 
     // Constructors, getters, setters
     public InfoJson() {
-        this.appName = "AeroJudge App";
+        this.appName = "AeroJudge Device";
         this.appVersion = "?";
         this.info_lines = null;
     }
