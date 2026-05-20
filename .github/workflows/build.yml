@@ -75,7 +75,7 @@ jobs:
           echo "No previous stable tag found; checking files in tagged commit $tag"
         fi
 
-        if echo "$changed_files" | grep -E '^(judge/|figures/|volume_service/)' >/dev/null; then
+        if echo "$changed_files" | grep -E '^(pom\.xml|judge/|figures/|volume_service/)' >/dev/null; then
           echo "should_release=true" >> "$GITHUB_OUTPUT"
           echo "Releasable changes detected"
         else
@@ -88,13 +88,30 @@ jobs:
 
     - name: Skip summary
       if: steps.detect-changes.outputs.should_release != 'true'
-      run: echo "Skipping release because no changes were found in judge/, figures/, or volume_service/"
+      run: echo "Skipping release because no changes were found in pom.xml, judge/, figures/, or volume_service/"
 
     - uses: actions/setup-java@v5
       if: steps.detect-changes.outputs.should_release == 'true'
       with:
         java-version: '17'
         distribution: 'temurin'
+    - name: Align Maven version with release tag
+      if: steps.detect-changes.outputs.should_release == 'true'
+      shell: bash
+      run: |
+          set -euo pipefail
+
+          release_version="${{ steps.detect-changes.outputs.release_tag }}"
+          release_version="${release_version#v}"
+          if ! [[ "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must use vYY.MAJOR.MINOR, such as v26.1.0" >&2
+            exit 1
+          fi
+
+          RELEASE_VERSION="$release_version" perl -0pi -e 's/(<artifactId>aerojudge-device-app<\/artifactId>\s*<version>)[^<]+/${1}$ENV{RELEASE_VERSION}/g' pom.xml judge/pom.xml
+          RELEASE_VERSION="$release_version" perl -0pi -e 's/(<artifactId>judge<\/artifactId>\s*<version>)[^<]+/${1}$ENV{RELEASE_VERSION}/g' judge/pom.xml
+
+          grep -n "<version>$release_version</version>" pom.xml judge/pom.xml
     - if: steps.detect-changes.outputs.should_release == 'true'
       run: |
           cd judge

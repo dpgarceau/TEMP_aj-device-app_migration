@@ -50,5 +50,14 @@ The first AeroJudge Device App release is `26.1.0`.
 GitHub release tags should use the same version with a leading `v`, such as
 `v26.1.0`.
 
+Release automation is documented in `RELEASES.md`. In short, day-to-day merges
+to `main` auto-increment the last number within the release line selected by
+the Maven version. Humans change the release line by updating the Maven version,
+for example from `26.1.0` to `27.1.0`.
+
+The GitHub release tag, GitHub release name, and packaged JAR implementation
+version must match. The release workflow rewrites the Maven version in the
+temporary GitHub Actions checkout to the generated tag version before packaging.
+
 The legacy IMAC Judge App repository may continue independently after this
 transition point.

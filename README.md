@@ -9,6 +9,10 @@ AeroJudge Device App is a continuation of the former IMAC Judge App maintained a
 
 This repository starts from a clean migration path after package, build, script, and branding updates. Its transition point from the legacy repository is commit `8afe8c603a5140964fed9d7897ab8b53aea4d9b5` (`v2.1.2-rc3-38-g8afe8c6`).
 
+## Releases
+
+AeroJudge release versioning and auto-release behavior are documented in [RELEASES.md](RELEASES.md).
+
 
 # For developer environment please look below
 

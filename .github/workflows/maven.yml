@@ -46,7 +46,7 @@ jobs:
           fi
         fi
 
-        if echo "$changed_files" | grep -E '^(judge/|figures/|volume_service/)' >/dev/null; then
+        if echo "$changed_files" | grep -E '^(pom\.xml|judge/|figures/|volume_service/)' >/dev/null; then
           echo "should_tag=true" >> "$GITHUB_OUTPUT"
           echo "Releasable changes detected"
         else
@@ -56,30 +56,37 @@ jobs:
 
     - name: Skip summary
       if: steps.detect-changes.outputs.should_tag != 'true'
-      run: echo "Skipping tag creation because no changes were found in judge/, figures/, or volume_service/"
+      run: echo "Skipping tag creation because no changes were found in pom.xml, judge/, figures/, or volume_service/"
 
-    - name: Get Latest Tag
-      id: latest-tag
-      if: steps.detect-changes.outputs.should_tag == 'true'
-      run: |
-        git fetch --tags
-        latest_tag=$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | head -n 1)
-        if [ -z "$latest_tag" ]; then
-          latest_tag="v1.0.0"
-        fi
-        echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
-
-    - name: Increment Tag
+    - name: Generate Release Tag
       id: increment-tag
       if: steps.detect-changes.outputs.should_tag == 'true'
+      shell: bash
       run: |
-        latest_tag="${{ steps.latest-tag.outputs.latest_tag }}"
-        prefix=${latest_tag%.*}
-        last_number=${latest_tag##*.}
-        new_number=$((last_number + 1))
-        new_tag="$prefix.$new_number"
+        set -euo pipefail
+        git fetch --tags
+
+        project_version="$(grep -m1 -oE '<version>[0-9]+\.[0-9]+\.[0-9]+</version>' pom.xml | sed -E 's#</?version>##g')"
+        if ! [[ "$project_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Root pom.xml version must use YY.MAJOR.MINOR, such as 26.1.0" >&2
+          exit 1
+        fi
+
+        base_prefix="v${project_version%.*}"
+        base_prefix_regex="${base_prefix//./\\.}"
+        latest_tag="$(git tag --list "${base_prefix}.*" --sort=-v:refname | grep -E "^${base_prefix_regex}\.[0-9]+$" | head -n 1 || true)"
+
+        if [ -z "$latest_tag" ]; then
+          new_tag="v$project_version"
+          echo "No release tags found for $base_prefix; starting at $new_tag"
+        else
+          last_number=${latest_tag##*.}
+          new_number=$((last_number + 1))
+          new_tag="$base_prefix.$new_number"
+          echo "Latest release tag for $base_prefix is $latest_tag; incremented to $new_tag"
+        fi
+
         echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
-        echo "Incremented tag: $new_tag"
 
     - name: Create Tag
       if: steps.detect-changes.outputs.should_tag == 'true'
