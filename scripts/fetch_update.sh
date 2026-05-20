@@ -17,7 +17,7 @@
 #   2 = Update successfully applied / assets downloaded and ready
 # =============================================================================
 
-UPDATE_URL="https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/judge_update.sh"
+UPDATE_URL="https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge_update.sh"
 
 # Download the update script to a temp file so we can pass arguments to it.
 # The previous `curl | bash` pattern could not forward arguments.

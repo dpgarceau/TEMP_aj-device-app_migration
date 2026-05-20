@@ -14,7 +14,7 @@ rm pilots/scores/*
 
 cd ~
 rm .judge_last_release  
-curl -sfS https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/fetch_update.sh -o /home/judge/fetch_update.sh
+curl -sfS https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/fetch_update.sh -o /home/judge/fetch_update.sh
 chmod +x /home/judge/fetch_update.sh
 /home/judge/fetch_update.sh
 
