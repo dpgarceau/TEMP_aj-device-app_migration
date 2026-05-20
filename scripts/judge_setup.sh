@@ -6,6 +6,46 @@ Blue='\033[0;34m'         # Blue
 Red='\033[0;31m'          # Red
 NC="\033[0m" 			  # No Color
 
+echo -e "${Red}WARNING: judge_setup.sh is the legacy IMAC-ORG derived setup script.${NC}"
+echo -e "${Yellow}For official AeroJudge devices with PCB v3.5x / v3.51, use scripts/device_setup.sh instead.${NC}"
+echo ""
+echo -e "${Yellow}Choose setup path:${NC}"
+echo -e "${Yellow}1 = Exit now${NC}"
+echo -e "${Yellow}2 = Run AeroJudge device_setup.sh${NC}"
+echo -e "${Yellow}3 = Continue legacy judge_setup.sh anyway${NC}"
+read setup_choice
+
+case $setup_choice in
+	2)
+		if [ -f "./device_setup.sh" ]; then
+			chmod +x ./device_setup.sh
+			exec ./device_setup.sh
+		fi
+		echo -e "${Yellow}Local device_setup.sh not found. Fetching latest from AeroJudge/aerojudge-device-app...${NC}"
+		if command -v curl > /dev/null 2>&1; then
+			curl -sfS https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/device_setup.sh -o /tmp/device_setup.sh
+		elif command -v wget > /dev/null 2>&1; then
+			wget -q https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/device_setup.sh -O /tmp/device_setup.sh
+		else
+			echo -e "${Red}Neither curl nor wget is available. Exiting.${NC}" >&2
+			exit 1
+		fi
+		if [ $? -ne 0 ]; then
+			echo -e "${Red}Unable to fetch device_setup.sh. Exiting.${NC}" >&2
+			exit 1
+		fi
+		chmod +x /tmp/device_setup.sh
+		exec /tmp/device_setup.sh
+		;;
+	3)
+		echo -e "${Red}Continuing legacy setup. Do not use this path for PCB v3.5x / v3.51 devices.${NC}"
+		;;
+	*)
+		echo "Setup cancelled."
+		exit 0
+		;;
+esac
+
 echo -e "${Green}Setting up your AeroJudge Scoring Device"
 echo -e "${Red}Please note this script should only be run once !!!"
 
