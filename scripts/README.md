@@ -1,6 +1,10 @@
 # AeroJudge Device App Bootstrap Script Install
 
-1. Using the Raspberry Pi Imager available from the Raspberry site write the Raspberry Pi OS (32-bit) Desktop version to the SD card. Configure the relevant WiFi details, enable SSH and setup the user name judge (required) and password
+These instructions are for official AeroJudge Device hardware with serial numbers above DPG-100 that use PCB revisions 3.51, 3.5x.
+
+Use `device_setup.sh` for new AeroJudge Device builds. The older `judge_setup.sh` script remains in this repository as a legacy transition helper for older IMAC-ORG derived hardware and development history. Do not use `judge_setup.sh` for new official AeroJudge PCB v3.5x / v3.51 devices.
+
+1. Using the Raspberry Pi Imager available from the Raspberry site write the Raspberry Pi OS Bullseye (32-bit) Desktop version to the SD card. Configure the relevant WiFi details, enable SSH and setup the user name judge (required) and password
 	- username : judge
 	- password : <*password*>
    <br>
@@ -21,9 +25,9 @@ chmod +x LCD35B-show-V2
 5. Now run the following commands
 ```
 cd /home/judge
-wget -O judge_setup.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge_setup.sh
-chmod +x judge_setup.sh
-./judge_setup.sh
+wget -O device_setup.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/device_setup.sh
+chmod +x device_setup.sh
+./device_setup.sh
 ```
 <br>
 
