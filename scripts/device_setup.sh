@@ -36,7 +36,7 @@ install_required_packages() {
     sudo apt purge smartsim java-common libreoffice* lxplug-updater -y > /dev/null 2>&1
 
     echo -e "${Yellow}Installing required packages...${NC}"
-    sudo apt install vim openjdk-17-jre xdotool unclutter sed locate xinput-calibrator curl wget unzip pcmanfm -y > /dev/null 2>&1
+    sudo apt install vim openjdk-17-jre xdotool unclutter sed locate xinput-calibrator curl wget unzip pcmanfm python3-evdev -y > /dev/null 2>&1
     sudo apt clean > /dev/null 2>&1
     sudo apt autoremove -y > /dev/null 2>&1
 }
