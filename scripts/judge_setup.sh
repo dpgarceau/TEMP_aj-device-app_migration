@@ -235,7 +235,7 @@ echo "xset s off # disable screen saver " >> /home/judge/.bashrc
 echo "xset -dpms # disable DPMS (Energy Star) features" >> /home/judge/.bashrc
 echo "xset s noblank # disable screen blanking " >> /home/judge/.bashrc
 
-echo -e "${Yellow}Setting up the AeroJudge App..."
+echo -e "${Yellow}Setting up the AeroJudge Device App..."
 sudo mkdir /var/opt/judge 																													> /dev/null 2>&1
 sudo chown judge:judge /var/opt/judge 																										> /dev/null 2>&1
 mkdir /var/opt/judge/bin 																													> /dev/null 2>&1
@@ -262,4 +262,4 @@ unzip -o /tmp/data.zip -d /var/opt/judge/
 
 /home/judge/fetch_update.sh
 
-echo -e "${Yellow}AeroJudge App installation complete!"
+echo -e "${Yellow}AeroJudge Device App installation complete!"
