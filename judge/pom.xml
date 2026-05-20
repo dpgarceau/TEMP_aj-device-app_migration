@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>com.aerojudge</groupId>
 		<artifactId>aerojudge-device-app</artifactId>
-		<version>1.0.0</version>
+		<version>26.1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<groupId>com.aerojudge</groupId>
 	<artifactId>judge</artifactId>
-	<version>2.1.2</version>
+	<version>26.1.0</version>
 	<name>judge</name>
 	<description>AeroJudge</description>
 	<packaging>jar</packaging>
