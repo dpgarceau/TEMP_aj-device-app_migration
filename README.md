@@ -1,5 +1,24 @@
 # IMAC-Judge-App
 
+## Project Direction
+
+This repository is being prepared to become the AeroJudge Device App: the judging application for current official AeroJudge Device hardware.
+
+The forward path has two main goals:
+
+1. Rename and re-version the application as AeroJudge Device App / AeroJudge Device so it is clearly distinct from other AeroJudge projects.
+2. Align setup scripts, device configuration, and hardware support with the current physical AeroJudge Device product.
+
+Changes will be made through focused branches and reviewed before merging to `main`. The intent is to avoid broad live edits on `main` and keep identity, release, setup, and hardware changes separated enough to review safely.
+
+## Legacy IMAC-ORG Archive Plan
+
+The legacy IMAC-ORG code path should be preserved as an archive or mirror so it is not lost if the upstream repository changes or disappears.
+
+That archive is for preservation and reference. This repository's `main` branch should not actively maintain legacy IMAC-ORG derived hardware support unless a specific future decision changes that policy.
+
+Legacy builders and older hardware should continue to use the legacy IMAC-ORG code path. Current AeroJudge Device App work should target current official AeroJudge Device hardware.
+
 # For AeroJudge setup instruction please take a look here
 ## https://github.com/IMAC-ORG/imac-judge-app/tree/main/scripts
 
