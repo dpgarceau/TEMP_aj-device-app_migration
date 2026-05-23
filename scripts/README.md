@@ -1,4 +1,4 @@
-# Aerojudge Bootstrap Script Install
+# AeroJudge Device App Bootstrap Script Install
 
 1. Using the Raspberry Pi Imager available from the Raspberry site write the Raspberry Pi OS (32-bit) Desktop version to the SD card. Configure the relevant WiFi details, enable SSH and setup the user name judge (required) and password
 	- username : judge
@@ -21,17 +21,17 @@ chmod +x LCD35B-show-V2
 5. Now run the following commands
 ```
 cd /home/judge
-wget -O judge_setup.sh https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/judge_setup.sh
+wget -O judge_setup.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge_setup.sh
 chmod +x judge_setup.sh
 ./judge_setup.sh
 ```
 <br>
 
-6. Once the script is complete and the system is rebooted it will take about 2min for AeroJudge to start, then you should be able to browse to **http://rPI-IP:8080** from your PC or if your screen is connected, you should see AeroJudge loaded.
+6. Once the script is complete and the system is rebooted it will take about 2min for AeroJudge Device to start, then you should be able to browse to **http://rPI-IP:8080** from your PC or if your screen is connected, you should see AeroJudge Device loaded.
 <br>
 <br>
 
-# Aerojudge Setup From Pre Built SD
+# AeroJudge Device App Setup From Pre Built SD
 
 1. Using the Raspberry Pi Imager write the Raspberry Pi OS (32-bit) to the SD card.
    <br>
@@ -60,7 +60,7 @@ chmod +x judge_setup.sh
 	<br>	
 
 
-# Aerojudge Setup From Scratch
+# AeroJudge Device App Setup From Scratch
 
 The purpose of this document is to set out the process to the build a Raspberry PI judging unit from ground up. This document assumes that you are familiar with basic linux commands and SSH access into a linux terminal.
 
