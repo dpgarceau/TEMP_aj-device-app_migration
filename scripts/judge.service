@@ -1,5 +1,5 @@
 [Unit]
-Description=IMAC Judge Webapp Java REST Service
+Description=AeroJudge Device App Java REST Service
 
 [Service]
 User=judge

@@ -235,19 +235,19 @@ echo "xset s off # disable screen saver " >> /home/judge/.bashrc
 echo "xset -dpms # disable DPMS (Energy Star) features" >> /home/judge/.bashrc
 echo "xset s noblank # disable screen blanking " >> /home/judge/.bashrc
 
-echo -e "${Yellow}Setting up the AeroJudge App..."
+echo -e "${Yellow}Setting up the AeroJudge Device App..."
 sudo mkdir /var/opt/judge 																													> /dev/null 2>&1
 sudo chown judge:judge /var/opt/judge 																										> /dev/null 2>&1
 mkdir /var/opt/judge/bin 																													> /dev/null 2>&1
 
-sudo wget -O /lib/systemd/system/judge.service https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/judge.service 		> /dev/null 2>&1
-wget -O /var/opt/judge/bin/judge.sh https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/judge.sh							> /dev/null 2>&1
-wget -O /home/judge/fetch_update.sh https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/fetch_update.sh				> /dev/null 2>&1
+sudo wget -O /lib/systemd/system/judge.service https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge.service 		> /dev/null 2>&1
+wget -O /var/opt/judge/bin/judge.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge.sh							> /dev/null 2>&1
+wget -O /home/judge/fetch_update.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/fetch_update.sh				> /dev/null 2>&1
 chmod +x /home/judge/fetch_update.sh																									> /dev/null 2>&1	
-sudo wget -O /lib/systemd/system/kiosk.service https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/kiosk.service			> /dev/null 2>&1
-wget -O /var/opt/judge/bin/kiosk.sh https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/kiosk.sh							> /dev/null 2>&1
+sudo wget -O /lib/systemd/system/kiosk.service https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/kiosk.service			> /dev/null 2>&1
+wget -O /var/opt/judge/bin/kiosk.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/kiosk.sh							> /dev/null 2>&1
 
-wget -O /home/judge/ajdesktop.png https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/ajdesktop.png						> /dev/null 2>&1
+wget -O /home/judge/ajdesktop.png https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/ajdesktop.png						> /dev/null 2>&1
 pcmanfm --set-wallpaper /home/judge/ajdesktop.png --wallpaper-mode=stretch																	> /dev/null 2>&1
 
 chmod +x /var/opt/judge/bin/judge.sh					> /dev/null 2>&1	
@@ -257,9 +257,9 @@ sudo systemctl enable kiosk.service				    		> /dev/null 2>&1
 sudo ln -s /boot/settings.json /var/opt/judge/settings.json	> /dev/null 2>&1
 
 echo -e "${Yellow}Creating Default Pilots for Testing..."
-wget -O /tmp/data.zip https://raw.githubusercontent.com/IMAC-ORG/imac-judge-app/main/scripts/data.zip						    > /dev/null 2>&1
+wget -O /tmp/data.zip https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/data.zip						    > /dev/null 2>&1
 unzip -o /tmp/data.zip -d /var/opt/judge/
 
 /home/judge/fetch_update.sh
 
-echo -e "${Yellow}AeroJudge App installation complete!"
+echo -e "${Yellow}AeroJudge Device App installation complete!"

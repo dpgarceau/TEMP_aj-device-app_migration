@@ -116,7 +116,7 @@ do_download() {
 
     last_release=$(cat "$VERSION_FILE")
 
-    latest_release=$(curl --silent --fail -G https://api.github.com/repos/IMAC-ORG/imac-judge-app/releases/latest)
+    latest_release=$(curl --silent --fail -G https://api.github.com/repos/AeroJudge/aerojudge-device-app/releases/latest)
     if [ $? -ne 0 ]; then
         echo "Error fetching latest release (no internet?)!" >&2
         return 1
