@@ -1,3 +1,6 @@
+# 2026-05-24 Merged fragmented gitignore files into a single file for better maintainability and clarity.Will need cleanup and reorganization in the future, but this is a good start to reduce clutter and ensure all relevant files are ignored properly.
+
+
 # Compiled class file
 *.class
 
@@ -21,12 +24,53 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-/.idea
+
+### Maven / build output ###
+judge/target/
+!judge/.mvn/wrapper/maven-wrapper.jar
+!judge/**/src/main/**/target/
+!judge/**/src/test/**/target/
+judge/build/
+!judge/**/src/main/**/build/
+!judge/**/src/test/**/build/
+
+### Spring / generated project files ###
+judge/HELP.md
+judge/.apt_generated
+judge/.classpath
+judge/.factorypath
+judge/.project
+judge/.settings
+judge/.springBeans
+judge/.sts4-cache
+
+### NetBeans ###
+judge/nbproject/private/
+judge/nbbuild/
+judge/dist/
+judge/nbdist/
+judge/.nb-gradle/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### Judge Files not needing to be tracked ###
+dockerbuild/settings.json
+.devcontainer/judge/
+judge/test/local/
+judge/test/**/*.dat
+!judge/**/dockerbuild/score/config/**
 
 ### VS Code ###
 .vscode/
 *.code-workspace
 
-### Judge Files not needing to be tracked ###
-dockerbuild/settings.json
-.devcontainer/judge/
+### Docs local files ###
+docs/**/.$*
+docs/**/local/
+
+### Java upgrade scratch files ###
+.github/java-upgrade/**/*
