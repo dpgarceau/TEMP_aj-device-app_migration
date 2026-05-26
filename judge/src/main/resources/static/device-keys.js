@@ -44,6 +44,11 @@
 
     window.AeroJudgeDeviceKeys = {
         actionFromEvent: function (event) {
+            // Judge buttons are edge-triggered: holding a GPIO key must not repeat score/navigation actions.
+            if (event && event.repeat) {
+                return null;
+            }
+
             return digitActions[digitFromEvent(event)] || null;
         }
     };
