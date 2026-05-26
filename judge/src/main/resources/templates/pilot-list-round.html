@@ -46,6 +46,7 @@
     <link href="materialize/css/material_lcons.css" rel="stylesheet">
     <link href="materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
     <script src="jquery-3.6.4.min.js"></script>
+    <script src="device-keys.js"></script>
 
 </head>
 
@@ -296,18 +297,20 @@
     }
 
     //add button listeners
-    $(document).on("keypress", function (e) {
-        //numpad 6
-        if (e.which == 54) {
+    $(document).on("keydown", function (e) {
+        var action = AeroJudgeDeviceKeys.actionFromEvent(e);
+        if (!action) return;
+
+        e.preventDefault();
+
+        if (action == 'next') {
             carouselNext();
         }
-        //numpad 4
-        if (e.which == 52) {
+        if (action == 'back') {
             closeAllModals();
             $('.carousel').carousel('prev');
         }
-        //numpad 0 - play instructions
-        if (e.which == 48) {
+        if (action == 'caller') {
             playInstructions();
         }
     });

@@ -148,6 +148,7 @@
     <!--  Scripts-->
     <script src="jquery-3.6.4.min.js"></script>
     <script src="materialize/js/materialize.js"></script>
+    <script src="device-keys.js"></script>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -628,48 +629,22 @@
         }
 
         //add button listeners
-        $(document).on("keypress", function (e) {
-            // numpad 8
-            if (e.which == 56) {
-                addScore(0.5);
-            }
-            // numpad 2
-            if (e.which == 50) {
-                removeScore(0.5);
-            }
-            //numpad 5
-            if (e.which == 53) {
-                setScore(0);
-            }
-            //numpad 9
-            if (e.which == 57) {
-                addScore(1);
-            }
-            //numpad 3
-            if (e.which == 51) {
-                removeScore(1);
-            }
-            // numpad 7 
-            if (e.which == 55) {
-                setScore(-1);
-            }
-            // numpad 1
-            if (e.which == 49) {
-                setScore(-2);
-            }
-            //numpad 6
-            if (e.which == 54) {
-                carouselNext();
-            }
-            //numpad 4
-            if (e.which == 52) {
-                carouselPrev();
-            }
-            //numpad 0
-            if (e.which == 48) {
-                //shortdescription(0);
-                longDescription();
-            }
+        $(document).on("keydown", function (e) {
+            var action = AeroJudgeDeviceKeys.actionFromEvent(e);
+            if (!action) return;
+
+            e.preventDefault();
+
+            if (action == 'plus-half') addScore(0.5);
+            if (action == 'minus-half') removeScore(0.5);
+            if (action == 'zero') setScore(0);
+            if (action == 'plus-one') addScore(1);
+            if (action == 'minus-one') removeScore(1);
+            if (action == 'break') setScore(-1);
+            if (action == 'not-observed') setScore(-2);
+            if (action == 'next') carouselNext();
+            if (action == 'back') carouselPrev();
+            if (action == 'caller') longDescription();
         });
 
         $('#btnChangeDir').on('click', function(e) {
