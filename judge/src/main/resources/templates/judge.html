@@ -496,6 +496,14 @@
                 audio.volume = 1.0;
                 audio.play();
 
+            } else if (text == 'Deadline') {
+                audio.pause();
+                audio.currentTime = 0;
+                var audio_url = audioBasePath + '/score/deadline.mp3';
+                audio = new Audio(audio_url);
+                audio.volume = 1.0;
+                audio.play();
+
             } else {
                 synth.cancel();
                 const msg = new SpeechSynthesisUtterance();
@@ -522,6 +530,9 @@
             }
             if (score_text == 'N/O') {
                 return parseFloat(-2);
+            }
+            if (score_text == 'D/LINE') {
+                return parseFloat(-3);
             }
             return parseFloat($(score_id).text());
         }
@@ -690,7 +701,7 @@
         }
 
         function setScore(score) {
-            if (score == -1 || score == -2) {
+            if (score == -1 || score == -2 || score == -3) {
                 //check if scoring is half
                 var scoring = sequenceJson[score_index].scoring;
                 if (scoring != "HALF") {
@@ -710,6 +721,11 @@
             if (currentScore == -2) {
                 $(score_id).text('N/O');
                 textToSpeechCustomMessage('Not Observed');
+                //carouselNext();
+            }
+            if (currentScore == -3) {
+                $(score_id).text('D/LINE');
+                textToSpeechCustomMessage('Deadline');
                 //carouselNext();
             }
             if (currentScore >= 0) {
@@ -759,6 +775,7 @@
             if (action == 'plus-half') addScore(0.5);
             if (action == 'minus-half') removeScore(0.5);
             if (action == 'zero') setScore(0);
+            if (action == 'deadline') setScore(-3);
             if (action == 'plus-one') addScore(1);
             if (action == 'minus-one') removeScore(1);
             if (action == 'break') setScore(-1);

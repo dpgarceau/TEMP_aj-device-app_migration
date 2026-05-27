@@ -315,6 +315,10 @@ public class PilotService {
                             fscore = 0;
                             not_observed = true;
                         }
+                        if (fscore == -3) {
+                            fscore = 0;
+                            box_err = true;
+                        }
                         FigureUploadDTO figureScore = new FigureUploadDTO(fscore, box_err, break_err,not_observed, i);
                         figureScores.add(figureScore);
                     }

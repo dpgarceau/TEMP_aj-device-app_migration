@@ -13,7 +13,10 @@
         '8': 'plus-half',
         '9': 'plus-one'
     };
-    var pressedDigits = {};
+    var keyActions = {
+        '.': 'deadline'
+    };
+    var pressedKeys = {};
 
     function eventSource(event) {
         return event && event.originalEvent ? event.originalEvent : event;
@@ -48,30 +51,52 @@
         return null;
     }
 
-    function releaseFromEvent(event) {
+    function keyFromEvent(event) {
+        if (!event) {
+            return null;
+        }
+        var source = eventSource(event);
         var digit = digitFromEvent(event);
+
         if (digit) {
-            delete pressedDigits[digit];
+            return digit;
+        }
+
+        if (source.code === 'Period' || source.code === 'NumpadDecimal' || source.key === '.') {
+            return '.';
+        }
+
+        if (event.which === 190 || event.which === 110) {
+            return '.';
+        }
+
+        return null;
+    }
+
+    function releaseFromEvent(event) {
+        var key = keyFromEvent(event);
+        if (key) {
+            delete pressedKeys[key];
         }
     }
 
     window.addEventListener('keyup', releaseFromEvent, true);
     window.addEventListener('blur', function () {
-        pressedDigits = {};
+        pressedKeys = {};
     });
 
     window.AeroJudgeDeviceKeys = {
         actionFromEvent: function (event) {
-            var digit = digitFromEvent(event);
+            var key = keyFromEvent(event);
             var source = eventSource(event);
-            var action = digitActions[digit];
+            var action = digitActions[key] || keyActions[key];
 
             // Judge buttons are edge-triggered: holding a GPIO key must not repeat score/navigation actions.
-            if (!action || pressedDigits[digit] || (source && source.repeat)) {
+            if (!action || pressedKeys[key] || (source && source.repeat)) {
                 return null;
             }
 
-            pressedDigits[digit] = true;
+            pressedKeys[key] = true;
             return action;
         }
     };
