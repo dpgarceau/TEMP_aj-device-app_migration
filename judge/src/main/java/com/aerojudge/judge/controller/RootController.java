@@ -389,41 +389,7 @@ public class RootController {
     @GetMapping("/rounds")
     public String showRounds(@RequestParam(defaultValue = "completed", required = false) String mode, Model model)
             throws IOException {
-
-        model.addAttribute("isCurrentComp", compService.isCurrentComp());
-        model.addAttribute("isScoringRound", roundService.isScoringRound());
-        model.addAttribute("rounds", roundService.getRounds());
-        model.addAttribute("schedules", scheduleService.getSchedules());
-        if (compService.isCurrentComp()) {
-
-            model.addAttribute("scoreMode", compService.getComp().getScore_mode());
-            model.addAttribute("maxSeqPerRound", compService.getComp().getSequences());
-            model.addAttribute("maxUnknownSeqPerRound", compService.getComp().getUnknown_sequences());
-
-            switch (compService.getComp().getScore_mode()) {
-                case "byRound":
-                    if (roundService.isScoringRound()) {
-                        model.addAttribute("currentScoringRound", roundService.getScoringRound());
-                        logger.info("scoreMode byRound : Redirecting to pilot-list-round tpo score active round.");
-                        return "redirect:/pilot-list-round";
-                    } else {
-                        // Lets enter a new round to score.
-                        logger.info("scoreMode byRound : Redirecting to new round page.");
-                        return "redirect:/newround";
-                    }
-                case "global":
-                    logger.info("scoreMode global : Redirecting to pilot-list-global");
-                    return "redirect:/pilot-list-global";
-                default:
-                    logger.error("Invalid score mode " + compService.getComp().getScore_mode());
-                    return "redirect:/newcomp";
-            }
-        } else {
-            model.addAttribute("scoreMode", "byRound");
-            model.addAttribute("maxSeqPerRound", 2);
-            model.addAttribute("maxUnknownSeqPerRound", 1);
-        }
-        return "rounds";
+        return redirectForCurrentScoringMode();
     }
 
     @GetMapping("/newround")
