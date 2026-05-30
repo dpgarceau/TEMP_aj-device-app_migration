@@ -22,33 +22,8 @@
         return event && event.originalEvent ? event.originalEvent : event;
     }
 
-    function digitFromEvent(event) {
-        if (!event) {
-            return null;
-        }
-        var source = eventSource(event);
-
-        if (source.code && source.code.indexOf('Numpad') === 0) {
-            return source.code.substring('Numpad'.length);
-        }
-
-        if (source.code && source.code.indexOf('Digit') === 0) {
-            return source.code.substring('Digit'.length);
-        }
-
-        if (/^[0-9]$/.test(source.key)) {
-            return source.key;
-        }
-
-        if (event.which >= 48 && event.which <= 57) {
-            return String(event.which - 48);
-        }
-
-        if (event.which >= 96 && event.which <= 105) {
-            return String(event.which - 96);
-        }
-
-        return null;
+    function legacyKeyCode(event) {
+        return event.which || event.keyCode;
     }
 
     function keyFromEvent(event) {
@@ -56,17 +31,33 @@
             return null;
         }
         var source = eventSource(event);
-        var digit = digitFromEvent(event);
+        var keyCode = legacyKeyCode(event);
 
-        if (digit) {
-            return digit;
+        if (source.code && /^Numpad[0-9]$/.test(source.code)) {
+            return source.code.substring('Numpad'.length);
+        }
+
+        if (source.code && /^Digit[0-9]$/.test(source.code)) {
+            return source.code.substring('Digit'.length);
+        }
+
+        if (/^[0-9]$/.test(source.key)) {
+            return source.key;
+        }
+
+        if (keyCode >= 48 && keyCode <= 57) {
+            return String(keyCode - 48);
+        }
+
+        if (keyCode >= 96 && keyCode <= 105) {
+            return String(keyCode - 96);
         }
 
         if (source.code === 'Period' || source.code === 'NumpadDecimal' || source.key === '.') {
             return '.';
         }
 
-        if (event.which === 190 || event.which === 110) {
+        if (keyCode === 190 || keyCode === 110) {
             return '.';
         }
 
