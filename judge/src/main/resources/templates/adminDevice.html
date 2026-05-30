@@ -60,6 +60,16 @@
       gap: 15px;
       flex-wrap: wrap;
     }
+    .sub-setting-row {
+      border-top: 1px solid #cfd8dc;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+    .sub-setting-label {
+      font-size: 1.45rem;
+      font-weight: 500;
+      min-width: 230px;
+    }
     [type="radio"]:not(:checked)+span, [type="radio"]:checked+span {
       padding-left: 25px;
       font-size: 1.75rem;
@@ -138,6 +148,20 @@
             <label class="black-text">
               <input class="with-gap" name="score_mode" type="radio" value="byRound" />
               <span>By Round</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-row sub-setting-row" id="autoSyncScoresRow">
+          <div class="sub-setting-label">Attempt auto sync scores:</div>
+          <div class="radio-group">
+            <label class="black-text">
+              <input class="with-gap" name="attempt_auto_sync_scores" type="radio" value="false" checked />
+              <span>Off</span>
+            </label>
+            <label class="black-text">
+              <input class="with-gap" name="attempt_auto_sync_scores" type="radio" value="true" />
+              <span>On</span>
             </label>
           </div>
         </div>
@@ -258,6 +282,7 @@
     const scoreMode = /*[[${scoreMode}]]*/ 'global';
     const lineNumber = /*[[${lineNumber}]]*/ 1;
     const judgeId = /*[[${judgeId}]]*/ 1;
+    const attemptAutoSyncScores = /*[[${settings.attempt_auto_sync_scores}]]*/ false;
 
     // Store original values for rollback
     let originalLineNumber = lineNumber;
@@ -276,6 +301,8 @@
 
       // Set current values
       $("input[name=score_mode][value=" + scoreMode + "]").prop('checked', true);
+      $("input[name=attempt_auto_sync_scores][value=" + attemptAutoSyncScores + "]").prop('checked', true);
+      updateAutoSyncScoresVisibility();
       $('#lineNumber').text(currentLineNumber);
       $('#judgeNumber').text(currentJudgeId);
 
@@ -292,6 +319,21 @@
         }
       });
     });
+
+    $('input[name="score_mode"]').change(function() {
+      updateAutoSyncScoresVisibility();
+    });
+
+    function updateAutoSyncScoresVisibility() {
+      var selectedMode = $('input[name="score_mode"]:checked').val();
+      if (selectedMode === 'byRound') {
+        $('#autoSyncScoresRow').show();
+        $('input[name="attempt_auto_sync_scores"]').prop('disabled', false);
+      } else {
+        $('#autoSyncScoresRow').hide();
+        $('input[name="attempt_auto_sync_scores"]').prop('disabled', true);
+      }
+    }
 
     // Line Number controls
     $('#lineDown').click(function(e) {
@@ -331,6 +373,8 @@
     $("#saveScoringMode").click(function(e) {
       e.preventDefault();
       var selectedMode = $('input[name="score_mode"]:checked').val();
+      var selectedAutoSync = selectedMode === 'byRound'
+        && $('input[name="attempt_auto_sync_scores"]:checked').val() === 'true';
 
       $.ajax({
         type: "POST",
@@ -342,7 +386,7 @@
         dataType: "json",
         success: function (data) {
           if (data.result === "ok") {
-            M.toast({ html: 'Scoring mode saved', classes: 'green', displayLength: 5000 });
+            saveAutoSyncScoresSetting(selectedAutoSync);
           } else {
             M.toast({ html: 'Error: ' + data.message, classes: 'red', displayLength: 5000 });
           }
@@ -352,6 +396,38 @@
         }
       });
     });
+
+    function saveAutoSyncScoresSetting(selectedAutoSync) {
+      $.ajax({
+        type: "GET",
+        url: "/api/settings",
+        dataType: "json",
+        success: function (currentSettings) {
+          currentSettings.attempt_auto_sync_scores = selectedAutoSync;
+
+          $.ajax({
+            type: "POST",
+            url: "/api/settings",
+            data: JSON.stringify(currentSettings),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+              if (data.result === "ok") {
+                M.toast({ html: 'Scoring mode saved', classes: 'green', displayLength: 5000 });
+              } else {
+                M.toast({ html: 'Mode saved, but auto sync setting failed: ' + data.message, classes: 'red', displayLength: 5000 });
+              }
+            },
+            error: function () {
+              M.toast({ html: 'Mode saved, but auto sync setting failed', classes: 'red', displayLength: 5000 });
+            }
+          });
+        },
+        error: function () {
+          M.toast({ html: 'Mode saved, but current settings could not be loaded', classes: 'red', displayLength: 5000 });
+        }
+      });
+    }
 
     // Save Device Identity - show confirmation modal
     $("#saveDeviceIdentity").click(function(e) {

@@ -42,6 +42,29 @@
       margin: 0 0 28px;
     }
 
+    .sync-status {
+      font-size: calc(1vw + 1.4vh);
+      font-weight: 600;
+      margin: 0 0 18px;
+      min-height: 32px;
+    }
+
+    .sync-status.info {
+      color: #1565c0;
+    }
+
+    .sync-status.success {
+      color: #2e7d32;
+    }
+
+    .sync-status.warning {
+      color: #ef6c00;
+    }
+
+    .sync-status.error {
+      color: #c62828;
+    }
+
     .next-btn {
       min-width: 220px;
       height: 64px;
@@ -61,6 +84,7 @@
       <div class="complete-summary" th:if="${completedPilotCount != null}">
         <span th:text="${completedPilotCount}">0</span> pilots complete
       </div>
+      <div id="autoSyncStatus" class="sync-status" aria-live="polite"></div>
       <a href="/newround" class="waves-effect waves-light btn-large green darken-2 next-btn">Next Round</a>
     </div>
   </div>
@@ -68,16 +92,70 @@
   <script th:inline="javascript">
     /*<![CDATA[*/
     const language = /*[[${settings.language}]]*/ 'en';
+    const attemptAutoSyncScores = /*[[${settings.attempt_auto_sync_scores}]]*/ false;
 
     document.addEventListener('DOMContentLoaded', function () {
       const audio = new Audio('/man/' + language + '/audio/roundcompleted.mp3');
       audio.onerror = function () {};
       audio.play().catch(function () {});
 
-      window.setTimeout(function () {
-        window.location.replace('/newround');
-      }, 10000);
+      const redirectAfterAutoSync = function () {
+        window.setTimeout(function () {
+          window.location.replace('/newround');
+        }, 10000);
+      };
+
+      if (attemptAutoSyncScores) {
+        autoSyncScoresOnce().finally(redirectAfterAutoSync);
+      } else {
+        redirectAfterAutoSync();
+      }
     });
+
+    async function autoSyncScoresOnce() {
+      setAutoSyncStatus('Attempting score auto-sync...', 'info');
+
+      try {
+        const mismatchResponse = await fetch('/api/scores/mismatches', {
+          cache: 'no-store'
+        });
+        if (!mismatchResponse.ok) {
+          setAutoSyncStatus('Scores auto-sync skipped - mismatch check failed.', 'warning');
+          return;
+        }
+
+        const payload = await mismatchResponse.json();
+        if (payload && payload.mismatches && payload.mismatches.length > 0) {
+          setAutoSyncStatus('Scores auto-sync skipped - admin review recommended.', 'warning');
+          return;
+        }
+      } catch (e) {
+        setAutoSyncStatus('Scores auto-sync skipped - mismatch check failed.', 'warning');
+        return;
+      }
+
+      try {
+        const syncResponse = await fetch('/api/scores/sync', {
+          cache: 'no-store'
+        });
+        if (syncResponse.ok) {
+          setAutoSyncStatus('Scores auto-sync complete.', 'success');
+        } else {
+          setAutoSyncStatus('Scores auto-sync failed - use Push Scores when Score is available.', 'error');
+        }
+      } catch (e) {
+        setAutoSyncStatus('Scores auto-sync failed - use Push Scores when Score is available.', 'error');
+      }
+    }
+
+    function setAutoSyncStatus(message, statusClass) {
+      const status = document.getElementById('autoSyncStatus');
+      if (!status) {
+        return;
+      }
+      status.className = 'sync-status ' + statusClass;
+      status.textContent = message;
+    }
     /*]]>*/
   </script>
 </body>
