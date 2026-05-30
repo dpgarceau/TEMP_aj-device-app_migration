@@ -9,6 +9,7 @@
   <!-- CSS  -->
   <link href="/materialize/css/material_lcons.css" rel="stylesheet">
   <link href="/materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+  <link href="/device-toast.css" type="text/css" rel="stylesheet" media="screen,projection" />
   <style>
     .header-row {
       display: flex;
@@ -290,16 +291,16 @@
         dataType: "json",
         success: function (data) {
           if (data.result === "ok") {
-            M.toast({ html: 'Settings updated', classes: 'green', displayLength: 2000 });
+            M.toast({ html: 'Settings updated', classes: 'green', displayLength: 5000 });
           } else {
-            M.toast({ html: 'Error: ' + data.message, classes: 'red' });
+            M.toast({ html: 'Error: ' + data.message, classes: 'red', displayLength: 5000 });
           }
         },
         error: function (errObj) {
           if (isFormatChangeBlockedResponse(errObj)) {
             showFormatChangeBlocker(errObj.responseJSON);
           } else {
-            M.toast({ html: 'Error updating settings', classes: 'red' });
+            M.toast({ html: 'Error updating settings', classes: 'red', displayLength: 5000 });
           }
         }
       });
@@ -324,21 +325,21 @@
         dataType: "json",
         success: function (data) {
           if (data.result === "ok") {
-            M.toast({ html: 'Event refreshed', classes: 'green', displayLength: 2000 });
+            M.toast({ html: 'Event refreshed', classes: 'green', displayLength: 5000 });
             setTimeout(function() {
               window.location = '/validate-sequences';
             }, 2000);
           } else {
-            M.toast({ html: 'Error: ' + data.message, classes: 'red' });
+            M.toast({ html: 'Error: ' + data.message, classes: 'red', displayLength: 5000 });
           }
         },
         error: function (errObj) {
           if (isFormatChangeBlockedResponse(errObj)) {
             showFormatChangeBlocker(errObj.responseJSON);
           } else if (typeof errObj.responseJSON != "undefined") {
-            M.toast({ html: 'Error: ' + errObj.responseJSON.message, classes: 'red' });
+            M.toast({ html: 'Error: ' + errObj.responseJSON.message, classes: 'red', displayLength: 5000 });
           } else {
-            M.toast({ html: 'Error refreshing event', classes: 'red' });
+            M.toast({ html: 'Error refreshing event', classes: 'red', displayLength: 5000 });
           }
         }
       });
@@ -373,19 +374,19 @@
         dataType: "json",
         success: function (data) {
           if (data.result === "ok") {
-            M.toast({ html: 'New event loaded', classes: 'green', displayLength: 2000 });
+            M.toast({ html: 'New event loaded', classes: 'green', displayLength: 5000 });
             setTimeout(function() {
               window.location = '/validate-sequences';
             }, 2000);
           } else {
-            M.toast({ html: 'Error: ' + data.message, classes: 'red' });
+            M.toast({ html: 'Error: ' + data.message, classes: 'red', displayLength: 5000 });
           }
         },
         error: function (errObj) {
           if (typeof errObj.responseJSON != "undefined") {
-            M.toast({ html: 'Error: ' + errObj.responseJSON.message, classes: 'red' });
+            M.toast({ html: 'Error: ' + errObj.responseJSON.message, classes: 'red', displayLength: 5000 });
           } else {
-            M.toast({ html: 'Error loading new event', classes: 'red' });
+            M.toast({ html: 'Error loading new event', classes: 'red', displayLength: 5000 });
           }
         }
       });

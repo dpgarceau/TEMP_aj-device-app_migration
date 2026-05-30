@@ -300,19 +300,19 @@
               error: function (err) {
                 try {
                   // If we were able to return a proper JSON Object, get the message from there.
-                  M.toast({ html: 'Get info error: ' + JSON.parse(err.responseText).message})
+                  M.toast({ html: 'Get info error: ' + JSON.parse(err.responseText).message, displayLength: 5000})
                 } catch {
                   // Otherwise just use the default jquery way...
                   console.log("There was an error in the ajax operation: " + err.statusText);
                   console.log("ResponseText: " + err.responseText);
-                  M.toast({ html: 'Get info error: ' + err.responseText.substring(0, 80)})
+                  M.toast({ html: 'Get info error: ' + err.responseText.substring(0, 80), displayLength: 5000})
                 }
               },
               complete: function() {}
             });
 
           } catch (errMsg) {
-              M.toast({ html: 'Unable to get info', classes: 'toastMessage', displayLength: 4000 })
+              M.toast({ html: 'Unable to get info', classes: 'toastMessage', displayLength: 5000 })
           } finally {
             // start countdown if not already running
             if (!statusInfoInterval) {

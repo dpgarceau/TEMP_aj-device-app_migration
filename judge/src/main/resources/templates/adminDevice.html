@@ -9,6 +9,7 @@
   <!-- CSS  -->
   <link href="/materialize/css/material_lcons.css" rel="stylesheet">
   <link href="/materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+  <link href="/device-toast.css" type="text/css" rel="stylesheet" media="screen,projection" />
   <style>
     .header-row {
       display: flex;
@@ -341,13 +342,13 @@
         dataType: "json",
         success: function (data) {
           if (data.result === "ok") {
-            M.toast({ html: 'Scoring mode saved', classes: 'green', displayLength: 2000 });
+            M.toast({ html: 'Scoring mode saved', classes: 'green', displayLength: 5000 });
           } else {
-            M.toast({ html: 'Error: ' + data.message, classes: 'red' });
+            M.toast({ html: 'Error: ' + data.message, classes: 'red', displayLength: 5000 });
           }
         },
         error: function () {
-          M.toast({ html: 'Error saving mode', classes: 'red' });
+          M.toast({ html: 'Error saving mode', classes: 'red', displayLength: 5000 });
         }
       });
     });
@@ -358,7 +359,7 @@
 
       // Check if values actually changed
       if (currentLineNumber === originalLineNumber && currentJudgeId === originalJudgeId) {
-        M.toast({ html: 'No changes to save', classes: 'blue', displayLength: 2000 });
+        M.toast({ html: 'No changes to save', classes: 'blue', displayLength: 5000 });
         return;
       }
 
@@ -405,7 +406,7 @@
                   dataType: "json",
                   success: function (data) {
                     if (data.result === "ok") {
-                      M.toast({ html: 'Device updated & new event loaded', classes: 'green', displayLength: 2000 });
+                      M.toast({ html: 'Device updated & new event loaded', classes: 'green', displayLength: 5000 });
                       setTimeout(function() {
                         window.location = '/validate-sequences';
                       }, 2000);
@@ -426,16 +427,16 @@
                   }
                 });
               } else {
-                M.toast({ html: 'Error saving settings: ' + data.message, classes: 'red' });
+                M.toast({ html: 'Error saving settings: ' + data.message, classes: 'red', displayLength: 5000 });
               }
             },
             error: function () {
-              M.toast({ html: 'Error saving settings', classes: 'red' });
+              M.toast({ html: 'Error saving settings', classes: 'red', displayLength: 5000 });
             }
           });
         },
         error: function () {
-          M.toast({ html: 'Error fetching current settings', classes: 'red' });
+          M.toast({ html: 'Error fetching current settings', classes: 'red', displayLength: 5000 });
         }
       });
     });
@@ -477,7 +478,7 @@
             } else {
               // Already up to date
               $('#updateMessage').html('<span class="green-text">Already up to date (v' + data.currentVersion + ')</span>');
-              M.toast({ html: 'Already running latest version', classes: 'green', displayLength: 3000 });
+              M.toast({ html: 'Already running latest version', classes: 'green', displayLength: 5000 });
             }
           } else {
             $('#updateMessage').html('<span class="orange-text">' + (data.message || 'Could not check for updates') + '</span>');
@@ -491,7 +492,7 @@
             msg = errObj.responseJSON.message;
           }
           $('#updateMessage').html('<span class="red-text">' + msg + '</span>');
-          M.toast({ html: msg, classes: 'red', displayLength: 4000 });
+          M.toast({ html: msg, classes: 'red', displayLength: 5000 });
         }
       });
     });
@@ -556,12 +557,12 @@
             } else {
               // No update needed (script returned exit 0)
               $('#updateMessage').html('<span class="green-text">' + (data.message || 'Already up to date') + '</span>');
-              M.toast({ html: data.message || 'Already up to date', classes: 'green', displayLength: 3000 });
+              M.toast({ html: data.message || 'Already up to date', classes: 'green', displayLength: 5000 });
               $('#runUpdate').removeClass('disabled');
             }
           } else {
             $('#updateMessage').html('<span class="red-text">' + (data.message || 'Update failed') + '</span>');
-            M.toast({ html: data.message || 'Update failed', classes: 'red', displayLength: 4000 });
+            M.toast({ html: data.message || 'Update failed', classes: 'red', displayLength: 5000 });
             $('#runUpdate').removeClass('disabled');
           }
         },
@@ -572,7 +573,7 @@
             msg = errObj.responseJSON.message;
           }
           $('#updateMessage').html('<span class="red-text">' + msg + '</span>');
-          M.toast({ html: msg, classes: 'red', displayLength: 4000 });
+          M.toast({ html: msg, classes: 'red', displayLength: 5000 });
           $('#runUpdate').removeClass('disabled');
         }
       });

@@ -1,0 +1,29 @@
+#toast-container {
+  top: auto !important;
+  right: auto !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  width: 700px;
+  max-width: calc(100vw - 48px);
+  transform: translateX(-50%);
+}
+
+#toast-container .toast,
+#toast-container .toast.toastMessage {
+  width: 100%;
+  min-height: 72px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 26px !important;
+  line-height: 1.18;
+  font-weight: 700;
+  color: #212121 !important;
+  background: #fff !important;
+  border: 5px solid #424242;
+  border-radius: 8px;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}

@@ -9,6 +9,7 @@
   <!-- CSS  -->
   <link href="/materialize/css/material_lcons.css" rel="stylesheet">
   <link href="/materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+  <link href="/device-toast.css" type="text/css" rel="stylesheet" media="screen,projection" />
   <style>
     .header-row {
       display: flex;
@@ -156,7 +157,7 @@
         url: '/api/rounds/active/clear',
         dataType: 'json',
         success: function () {
-          M.toast({ html: 'Active round cleared', classes: 'green', displayLength: 2000 });
+          M.toast({ html: 'Active round cleared', classes: 'green', displayLength: 5000 });
           setTimeout(function () {
             window.location.replace('/newround');
           }, 1000);

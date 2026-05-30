@@ -9,6 +9,7 @@
   <!-- CSS  -->
   <link href="materialize/css/material_lcons.css" rel="stylesheet">
   <link href="materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+  <link href="device-toast.css" type="text/css" rel="stylesheet" media="screen,projection" />
   <style>
     .heading {
       font-size: calc(2vw + 3vh) !important;
@@ -320,12 +321,12 @@
                   dataType: "json",
                   success: function(data) {
                     if (data.result === "ok") {
-                      M.toast({ html: 'Event loaded successfully', classes: 'green', displayLength: 2000 });
+                      M.toast({ html: 'Event loaded successfully', classes: 'green', displayLength: 5000 });
                       setTimeout(function() {
                         window.location = '/validate-sequences';
                       }, 2000);
                     } else {
-                      M.toast({ html: 'Error: ' + data.message, classes: 'red' });
+                      M.toast({ html: 'Error: ' + data.message, classes: 'red', displayLength: 5000 });
                     }
                   },
                   error: function(errObj) {
@@ -333,20 +334,20 @@
                     if (typeof errObj.responseJSON != "undefined") {
                       msg = 'Error: ' + errObj.responseJSON.message;
                     }
-                    M.toast({ html: msg, classes: 'red', displayLength: 4000 });
+                    M.toast({ html: msg, classes: 'red', displayLength: 5000 });
                   }
                 });
               } else {
-                M.toast({ html: 'Error saving settings: ' + data.message, classes: 'red' });
+                M.toast({ html: 'Error saving settings: ' + data.message, classes: 'red', displayLength: 5000 });
               }
             },
             error: function() {
-              M.toast({ html: 'Error saving settings', classes: 'red' });
+              M.toast({ html: 'Error saving settings', classes: 'red', displayLength: 5000 });
             }
           });
         },
         error: function() {
-          M.toast({ html: 'Error fetching settings', classes: 'red' });
+          M.toast({ html: 'Error fetching settings', classes: 'red', displayLength: 5000 });
         }
       });
     });

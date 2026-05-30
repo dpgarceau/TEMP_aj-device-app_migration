@@ -45,6 +45,7 @@
     <!-- CSS  -->
     <link href="materialize/css/material_lcons.css" rel="stylesheet">
     <link href="materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+    <link href="device-toast.css" type="text/css" rel="stylesheet" media="screen,projection" />
     <script src="jquery-3.6.4.min.js"></script>
     <script src="device-keys.js"></script>
 
@@ -216,12 +217,12 @@
           url: "/api/pilots/sync",
         });
 
-        M.toast({ html: 'Pilot/Sequence Sync Success', classes: 'toastMessage', displayLength: 4000 });
+        M.toast({ html: 'Pilot/Sequence Sync Success', classes: 'toastMessage', displayLength: 5000 });
 
         await delay(4000); // Wait for 4 seconds before validating sequences
         window.location.replace("/validate-sequences");
       } catch (errMsg) {
-        M.toast({ html: 'Pilot Sync Error - Is Score Available?', classes: 'toastMessage', displayLength: 4000 });
+        M.toast({ html: 'Pilot Sync Error - Is Score Available?', classes: 'toastMessage', displayLength: 5000 });
       }
     }
 
@@ -246,10 +247,10 @@
     function doActualSync() {
       $.ajax({ url: '/api/scores/sync' })
         .done(function () {
-          M.toast({ html: 'Scores Sync Success', classes: 'toastMessage', displayLength: 4000 });
+          M.toast({ html: 'Scores Sync Success', classes: 'toastMessage', displayLength: 5000 });
         })
         .fail(function () {
-          M.toast({ html: 'Scores Sync Error - Is Score Available?', classes: 'toastMessage', displayLength: 4000 });
+          M.toast({ html: 'Scores Sync Error - Is Score Available?', classes: 'toastMessage', displayLength: 5000 });
         });
     }
 

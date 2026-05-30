@@ -9,6 +9,7 @@
   <!-- CSS  -->
   <link href="/materialize/css/material_lcons.css" rel="stylesheet">
   <link href="/materialize/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+  <link href="/device-toast.css" type="text/css" rel="stylesheet" media="screen,projection" />
   <style>
     .header-row {
       display: flex;
@@ -364,7 +365,7 @@
         },
         error: function () {
           $('#loadingState').hide();
-          M.toast({ html: 'Could not load detection data', classes: 'red' });
+          M.toast({ html: 'Could not load detection data', classes: 'red', displayLength: 5000 });
         }
       });
     }
@@ -529,14 +530,14 @@
           if (data.result === 'ok') {
             showStep('step-result');
           } else {
-            M.toast({ html: data.message || 'Swap failed', classes: 'red' });
+            M.toast({ html: data.message || 'Swap failed', classes: 'red', displayLength: 5000 });
           }
         },
         error: function (errObj) {
           const msg = errObj.responseJSON && errObj.responseJSON.message
               ? errObj.responseJSON.message
               : 'Swap failed';
-          M.toast({ html: msg, classes: 'red' });
+          M.toast({ html: msg, classes: 'red', displayLength: 5000 });
         }
       });
     }
