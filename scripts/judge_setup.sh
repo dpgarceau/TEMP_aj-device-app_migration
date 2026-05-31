@@ -1,265 +1,308 @@
 #!/bin/bash
-clear
-Green='\033[0;32m'        # Green
-Yellow='\033[0;33m'       # Yellow
-Blue='\033[0;34m'         # Blue
-Red='\033[0;31m'          # Red
-NC="\033[0m" 			  # No Color
+#
+# Current AeroJudge fresh-device setup script.
+# The previous legacy setup script is preserved as scripts/judge_setup_legacy.sh.
 
-echo -e "${Green}Setting up your AeroJudge Scoring Device"
-echo -e "${Red}Please note this script should only be run once !!!"
+set -Eeuo pipefail
 
-echo -e "${Yellow}Use swap file (older Pi) (y/n) ?"
-read response
+LOG_FILE="/home/judge/aerojudge-setup.log"
+RAW_BASE_URL="${AEROJUDGE_RAW_BASE_URL:-https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main}"
+RELEASE_API_URL="${AEROJUDGE_RELEASE_API_URL:-https://api.github.com/repos/AeroJudge/aerojudge-device-app/releases/latest}"
 
-case $response in
-	y|Y)
-		# Setup Swap to 512MB
-		echo -e "${Yellow}Setting swapfile to 512MB..."
-		sudo dphys-swapfile swapoff 					> /dev/null 2>&1
-		sudo sed -i 's/100/512/g' /etc/dphys-swapfile 	> /dev/null 2>&1
-		sudo dphys-swapfile setup 						> /dev/null 2>&1
-		sudo dphys-swapfile swapon 						> /dev/null 2>&1
-		;;
-esac
+INSTALL_DIR="/var/opt/judge"
+BIN_DIR="$INSTALL_DIR/bin"
+SETTINGS_FILE="$INSTALL_DIR/settings.json"
+BOOT_CONFIG="/boot/config.txt"
+BOOT_CONFIG_BACKUP="/boot/config.txt.before-aerojudge"
 
-# Updating the OS
-echo -e "${Yellow}Updating the OS..."
-#echo "deb http://mirror.ox.ac.uk/sites/archive.raspbian.org/archive/raspbian bullseye main contrib non-free rpi" | sudo tee -a /etc/apt/sources.list > /dev/null 2>&1
-sudo apt update 			> /dev/null 2>&1
-sudo apt upgrade -y 		> /dev/null 2>&1
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
 
+exec > >(tee -a "$LOG_FILE") 2>&1
 
-# Removing any unwanted packages
-echo -e "${Yellow}Removing any unwanted packages..."
-sudo apt purge wolfram-engine scratch nuscratch sonic-pi idle3 -y 	> /dev/null 2>&1
-sudo apt purge smartsim java-common libreoffice* lxplug-updater -y 	> /dev/null 2>&1
+fail() {
+    echo -e "${RED}ERROR:${NC} $*" >&2
+    echo "Setup failed. See $LOG_FILE"
+    exit 1
+}
 
+on_error() {
+    local line_no="$1"
+    fail "Unexpected failure at line $line_no."
+}
 
-# Install required packages
-echo -e "${Yellow}Install required packages..."
-sudo apt install vim openjdk-17-jre xdotool unclutter sed locate vim xinput-calibrator -y 	> /dev/null 2>&1
-sudo apt clean 																				> /dev/null 2>&1
-sudo apt autoremove -y 																		> /dev/null 2>&1
+trap 'on_error "$LINENO"' ERR
 
-# Configure vim mouse preferances
-echo -e "${Yellow}Configure vim..."
-echo "set mouse-=a" | sudo tee -a /root/.vimrc 					> /dev/null 2>&1
-echo "set mouse-=a" | tee -a /home/judge/.vimrc 			> /dev/null 2>&1
+step() {
+    echo
+    echo -e "${YELLOW}[$1]${NC} $2"
+}
 
-# Disable IPV6
-echo -e "${Yellow}Disabling IPV6..."
-echo "net.ipv6.conf.all.disable_ipv6 = 1" 		| sudo tee -a /etc/sysctl.conf 			> /dev/null 2>&1
-echo "net.ipv6.conf.default.disable_ipv6 = 1" 		| sudo tee -a /etc/sysctl.conf 		> /dev/null 2>&1
-echo "net.ipv6.conf.lo.disable_ipv6 = 1" 		| sudo tee -a /etc/sysctl.conf 			> /dev/null 2>&1
-sudo sysctl -p > /dev/null 2>&1
+download() {
+    local url="$1"
+    local output="$2"
 
+    echo "Downloading $url"
+    wget -q -O "$output" "$url" || fail "Could not download $url"
+}
 
-# Disabling bluetooth
-echo -e "${Yellow}Disabling bluetooth..."
-echo "" 								| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-echo "#Disabling Bluetooth"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-echo "dtoverlay=disable-bt" 			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+confirm_target() {
+    clear
+    echo -e "${GREEN}AeroJudge Device Fresh Install${NC}"
+    echo
+    echo "Target hardware:"
+    echo "  - AeroJudge Device serial DPG-100 and above"
+    echo "  - AeroJudge PCB revision v3.5x and above"
+    echo "  - Raspberry Pi 4B"
+    echo "  - Raspberry Pi OS Bullseye 32-bit Desktop"
+    echo
+    echo -e "${RED}This script is for clean fresh installs only.${NC}"
+    echo "Do not run it on legacy devices or existing deployed devices."
+    echo
+    echo "Type CONFIRM to continue:"
+    read -r response
+    [ "$response" = "CONFIRM" ] || fail "Setup cancelled."
+}
 
+verify_target() {
+    step "1/10" "Verifying target OS, user, and fresh install state"
 
-#Overclocking Pi to 800mhz
-echo -e "${Yellow}Overclocking Pi to 800mhz..."						> /dev/null 2>&1
-sudo sed -i 's/#arm_freq=800/arm_freq=800/g' /boot/config.txt 		> /dev/null 2>&1
+    [ -f /etc/os-release ] || fail "/etc/os-release not found."
+    # shellcheck disable=SC1091
+    . /etc/os-release
 
-#Setting Screen refresh Rate
-echo -e "${Yellow}Setting Screen refresh Rate..."
-echo "" 									| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-echo "#Setting Screen refresh Rate"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1	
-echo "dtparam=speed=41000000" 				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-echo "dtparam=fps=30" 						| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+    [ "${VERSION_CODENAME:-}" = "bullseye" ] || fail "This setup requires Raspberry Pi OS Bullseye."
+    [ "$(getconf LONG_BIT)" = "32" ] || fail "This setup requires a 32-bit OS."
+    [ "$(id -un)" = "judge" ] || fail "This setup must be run as user judge."
 
+    [ ! -d "$INSTALL_DIR" ] || fail "$INSTALL_DIR already exists. Reimage the SD card before running fresh setup."
+    [ ! -e /home/judge/.judge_last_release ] || fail "/home/judge/.judge_last_release already exists. Reimage the SD card before running fresh setup."
+    [ ! -d /var/opt/volume_service ] || fail "/var/opt/volume_service already exists. Reimage the SD card before running fresh setup."
+    [ ! -e "$BOOT_CONFIG_BACKUP" ] || fail "$BOOT_CONFIG_BACKUP already exists. Reimage the SD card before running fresh setup."
 
-#Confgiuring gpio to key mappings
-echo -e "${Yellow}Confgiuring gpio to key mappings..."
-echo ""
-echo -e "${Blue}Default gpio mapping:"
-echo "Previous		= 5"
-echo "+0.5 			= 6"
-echo "+1.0 			= 13"
-echo "Caller			= 19"
-echo "Not Observed		= 26"
-echo "Next 			= 22"
-echo "-0.5 			= 27"
-echo "-1.0 			= 4"
-echo "Zero 			= 3"
-echo "Break 			= 2"
-echo ""
+    echo "OS: ${PRETTY_NAME:-unknown}"
+    echo "Architecture bits: $(getconf LONG_BIT)"
+    echo "User: $(id -un)"
+}
 
-echo -e "${Yellow}GPIO Mappings"
-echo -e "${Yellow}1 = Original Mappings"
-echo -e "${Yellow}2 = AeroJudge Red board (No v#) Mappings"
-echo -e "${Yellow}3 = AeroJudge Rev 2.5 (Blue board) Mappings"
-echo -e "${Yellow}C = Custom Mappings (with custom keys)"
+install_packages() {
+    step "2/10" "Installing required packages"
 
-echo -e "${Yellow}Enter version of mappings to use (1,2,3, or C)"
-read response
+    sudo apt update
+    sudo apt install -y \
+        openjdk-17-jre \
+        chromium-browser \
+        xdotool \
+        unclutter \
+        vim \
+        sed \
+        locate \
+        unzip \
+        curl \
+        wget \
+        alsa-utils \
+        python3 \
+        python3-evdev \
+        evtest \
+        pcmanfm
 
-case $response in
-	1)
-		echo "Setting up default gpio to key mappings"
-		echo ""																		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "#gpio key mappings" 													| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "dtoverlay=gpio-key,gpio=22,active_low=1,gpio_pull=up,keycode=7"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # encoder down/next
-		echo "dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=9"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # +0.5
-		echo "dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=10"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # +1
-		echo "dtoverlay=gpio-key,gpio=19,active_low=1,gpio_pull=up,keycode=11"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # caller
-		echo "dtoverlay=gpio-key,gpio=26,active_low=1,gpio_pull=up,keycode=2"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # Not Observer
-		echo "dtoverlay=gpio-key,gpio=5,active_low=1,gpio_pull=up,keycode=5"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # encoder up/previous
-		echo "dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=3"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # -0.5
-		echo "dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=4"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # -1
-		echo "dtoverlay=gpio-key,gpio=3,active_low=1,gpio_pull=up,keycode=6"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # zero
-		echo "dtoverlay=gpio-key,gpio=2,active_low=1,gpio_pull=up,keycode=8"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # break
-		;;
-	2)
-		echo "Setting up AeroJudge red board (No v#) gpio to key mappings"
-		echo ""																					| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "#gpio key mappings" 																| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "dtoverlay=gpio-key,gpio=22,active_low=1,gpio_pull=up,keycode=2  # Not Observed"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=3  # -0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=4   # -1"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=26,active_low=1,gpio_pull=up,keycode=5  # encoder up/previous"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=5,active_low=1,gpio_pull=up,keycode=6   # zero"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=19,active_low=1,gpio_pull=up,keycode=7  # encoder down/next"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=8  # break"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=2,active_low=1,gpio_pull=up,keycode=9   # +0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=3,active_low=1,gpio_pull=up,keycode=10  # +1"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=11  #speak"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		;;
-	3)
-		echo "Setting up AeroJudge Rev 2.5 (Blue board) gpio to key mappings"
-		echo ""																					| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "#gpio key mappings" 																| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "dtoverlay=gpio-key,gpio=15,active_low=1,gpio_pull=up,keycode=5  # encoder up/previous"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=14,active_low=1,gpio_pull=up,keycode=10  # +1"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=22,active_low=1,gpio_pull=up,keycode=9   # +0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=11  # caller"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=2  # Not Observed"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=20,active_low=1,gpio_pull=up,keycode=7  # encoder down/next"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=21,active_low=1,gpio_pull=up,keycode=4   # -1"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=5,active_low=1,gpio_pull=up,keycode=3   # -0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=6  # 0"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=8  # break"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo ""																					| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "#Shutdown and Power Off button commands (SN DPG-061 and above)" 					| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "dtoverlay=gpio-shutdown,gpio_pin=25,active_low=1,gpio_pull=up,debounce=3000"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-poweroff,gpiopin=24,active_delay_ms=5000,inactive_delay_ms=4000"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		;;
-	c|C) 
-		echo "Enter the prefered gpio mappings"
-		echo -e "${Blue}Previous :${NC}" 
-		read previous
-		echo -e "${Blue}+0.5 :${NC}"
-		read plus5
-		echo -e "${Blue}+1.0 :${NC}"
-		read plus1
-		echo -e "${Blue}Caller :${NC}"
-		read caller
-		echo -e "${Blue}Not Observed :${NC}"
-		read nob
-		echo -e "${Blue}Next :${NC}"
-		read next
-		echo -e "${Blue}-0.5 :${NC}"
-		read min5
-		echo -e "${Blue}-1.0 :${NC}"
-		read min1
-		echo -e "${Blue}Zero :${NC}"
-		read zero
-		echo -e "${Blue}Break :${NC}"
-		read break
-		echo ""
-		clear
-		echo -e "${Yellow}Creating Mapping"
-		echo "Previous 		:"$previous
-		echo "+0.5 			:"$plus5
-		echo "+1.0 			:"$plus1
-		echo "Caller 			:"$caller
-		echo "Not Observed 		:"$nob
-		echo "Next 			:"$next
-		echo "-0.5 			:"$min5
-		echo "-1.0 			:"$min1
-		echo "Zero 			:"$zero
-		echo "Break 			:"$break
-		echo ""
-		echo ""																			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "#gpio key mappings" 														| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "dtoverlay=gpio-key,gpio=$previous,active_low=1,gpio_pull=up,keycode=7"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # encoder down/next
-		echo "dtoverlay=gpio-key,gpio=$plus5,active_low=1,gpio_pull=up,keycode=9"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # +0.5
-		echo "dtoverlay=gpio-key,gpio=$plus1,active_low=1,gpio_pull=up,keycode=10"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # +1
-		echo "dtoverlay=gpio-key,gpio=$caller,active_low=1,gpio_pull=up,keycode=11"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # caller
-		echo "dtoverlay=gpio-key,gpio=$nob,active_low=1,gpio_pull=up,keycode=2"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # Not Observer
-		echo "dtoverlay=gpio-key,gpio=$next,active_low=1,gpio_pull=up,keycode=5"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # encoder up/previous
-		echo "dtoverlay=gpio-key,gpio=$min5,active_low=1,gpio_pull=up,keycode=3"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # -0.5
-		echo "dtoverlay=gpio-key,gpio=$min1,active_low=1,gpio_pull=up,keycode=4"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # -1
-		echo "dtoverlay=gpio-key,gpio=$zero,active_low=1,gpio_pull=up,keycode=6"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # zero
-		echo "dtoverlay=gpio-key,gpio=$break,active_low=1,gpio_pull=up,keycode=8"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1  # break
+    # locate is installed for field debugging, but setup does not build its
+    # database. If needed during an event, run `sudo updatedb` over SSH.
+}
 
-		;;
-esac
+verify_network_access() {
+    step "3/10" "Verifying repository and release access"
 
-echo -e "${Yellow}Configure settings.json file..."
+    local config_url="$RAW_BASE_URL/scripts/config.txt"
 
-echo -e "${Blue}Judge_ID:${NC}"
-read judgeid
-echo -e "${Blue}Flight Line:${NC}"
-read flightline
-echo -e "${Blue}Score IP:${NC}"
-read scoreip
-echo -e "${Blue}Score Port${NC}"
-read scoreport
-echo -e "${Blue}Enter two digit year${NC}"
-read seasonyear
+    wget -q --spider "$config_url" || fail "Cannot reach setup config: $config_url"
+    wget -q --spider "$RELEASE_API_URL" || fail "Cannot reach release API: $RELEASE_API_URL"
 
+    echo "Raw base URL: $RAW_BASE_URL"
+    echo "Release API URL: $RELEASE_API_URL"
+}
 
-echo -e "${Yellow}Creating settings.json file..."
+install_boot_config() {
+    step "4/10" "Installing AeroJudge boot config"
 
-echo '{'									| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '	"judge_id":'$judgeid','				| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '	"line_number":'$flightline','		| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '	"score_host":"'$scoreip'",'			| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '	"score_http_port":'$scoreport','	| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '	"language":"en",'					| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '	"score_poll_timeout":2,'			| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '	"score_timeout":10,'				| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '	"seasonYear":'$seasonyear''			| sudo tee -a /boot/settings.json	> /dev/null 2>&1
-echo '}'									| sudo tee -a /boot/settings.json	> /dev/null 2>&1
+    local tmp_config="/tmp/aerojudge-config.txt"
 
-echo -e "${Yellow}Configuring various settings..."
-echo "export DISPLAY=:0" >> /home/judge/.bashrc
-echo "xset r off # disable key repeat" >> /home/judge/.bashrc
-echo "xset s off # disable screen saver " >> /home/judge/.bashrc
-echo "xset -dpms # disable DPMS (Energy Star) features" >> /home/judge/.bashrc
-echo "xset s noblank # disable screen blanking " >> /home/judge/.bashrc
+    download "$RAW_BASE_URL/scripts/config.txt" "$tmp_config"
+    [ -s "$tmp_config" ] || fail "Downloaded config file is empty."
 
-echo -e "${Yellow}Setting up the AeroJudge Device App..."
-sudo mkdir /var/opt/judge 																													> /dev/null 2>&1
-sudo chown judge:judge /var/opt/judge 																										> /dev/null 2>&1
-mkdir /var/opt/judge/bin 																													> /dev/null 2>&1
+    sudo cp "$BOOT_CONFIG" "$BOOT_CONFIG_BACKUP"
+    sudo install -m 0644 "$tmp_config" "$BOOT_CONFIG"
 
-sudo wget -O /lib/systemd/system/judge.service https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge.service 		> /dev/null 2>&1
-wget -O /var/opt/judge/bin/judge.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge.sh							> /dev/null 2>&1
-wget -O /home/judge/fetch_update.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/fetch_update.sh				> /dev/null 2>&1
-chmod +x /home/judge/fetch_update.sh																									> /dev/null 2>&1	
-sudo wget -O /lib/systemd/system/kiosk.service https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/kiosk.service			> /dev/null 2>&1
-wget -O /var/opt/judge/bin/kiosk.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/kiosk.sh							> /dev/null 2>&1
+    echo "Backed up original boot config to $BOOT_CONFIG_BACKUP"
+    echo "Installed AeroJudge boot config to $BOOT_CONFIG"
+}
 
-wget -O /home/judge/ajdesktop.png https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/ajdesktop.png						> /dev/null 2>&1
-pcmanfm --set-wallpaper /home/judge/ajdesktop.png --wallpaper-mode=stretch																	> /dev/null 2>&1
+create_settings() {
+    step "5/10" "Creating device settings"
 
-chmod +x /var/opt/judge/bin/judge.sh					> /dev/null 2>&1	
-sudo systemctl enable judge.service				    		> /dev/null 2>&1
-sudo chmod +x /var/opt/judge/bin/kiosk.sh					> /dev/null 2>&1
-sudo systemctl enable kiosk.service				    		> /dev/null 2>&1
-sudo ln -s /boot/settings.json /var/opt/judge/settings.json	> /dev/null 2>&1
+    local judge_id="1"
+    local line_number="1"
+    local score_host="192.168.8.100"
+    local score_http_port="80"
+    local language="en"
+    local score_poll_timeout="2"
+    local score_timeout="10"
+    local season_year
 
-echo -e "${Yellow}Creating Default Pilots for Testing..."
-wget -O /tmp/data.zip https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/data.zip						    > /dev/null 2>&1
-unzip -o /tmp/data.zip -d /var/opt/judge/
+    while true; do
+        echo -e "${BLUE}Enter two digit season year, for example 26:${NC}"
+        read -r season_year
+        if [[ "$season_year" =~ ^[0-9]{2}$ ]]; then
+            break
+        fi
+        echo "Season year must be exactly two digits."
+    done
 
-/home/judge/fetch_update.sh
+    echo
+    echo "Settings to write:"
+    echo "  judge_id: $judge_id"
+    echo "  line_number: $line_number"
+    echo "  score_host: $score_host"
+    echo "  score_http_port: $score_http_port"
+    echo "  language: $language"
+    echo "  score_poll_timeout: $score_poll_timeout"
+    echo "  score_timeout: $score_timeout"
+    echo "  seasonYear: $season_year"
+    echo
 
-echo -e "${Yellow}AeroJudge Device App installation complete!"
+    sudo mkdir -p "$BIN_DIR"
+    sudo chown -R judge:judge "$INSTALL_DIR"
+
+    cat > /tmp/aerojudge-settings.json <<EOF
+{
+  "judge_id": $judge_id,
+  "line_number": $line_number,
+  "score_host": "$score_host",
+  "score_http_port": $score_http_port,
+  "language": "$language",
+  "score_poll_timeout": $score_poll_timeout,
+  "score_timeout": $score_timeout,
+  "seasonYear": $season_year
+}
+EOF
+
+    install -m 0644 /tmp/aerojudge-settings.json "$SETTINGS_FILE"
+    chown judge:judge "$SETTINGS_FILE"
+
+    echo "Created $SETTINGS_FILE"
+}
+
+install_runtime_files() {
+    step "6/10" "Installing services, scripts, and desktop image"
+
+    local tmp_dir="/tmp/aerojudge-setup-files"
+    rm -rf "$tmp_dir"
+    mkdir -p "$tmp_dir"
+
+    download "$RAW_BASE_URL/scripts/judge.service" "$tmp_dir/judge.service"
+    download "$RAW_BASE_URL/scripts/judge.sh" "$tmp_dir/judge.sh"
+    download "$RAW_BASE_URL/scripts/kiosk.service" "$tmp_dir/kiosk.service"
+    download "$RAW_BASE_URL/scripts/kiosk.sh" "$tmp_dir/kiosk.sh"
+    download "$RAW_BASE_URL/scripts/fetch_update.sh" "$tmp_dir/fetch_update.sh"
+    download "$RAW_BASE_URL/scripts/ajdesktop.png" "$tmp_dir/ajdesktop.png"
+    download "$RAW_BASE_URL/scripts/settings_readme.md" "$tmp_dir/settings_readme.md"
+
+    sudo install -m 0644 "$tmp_dir/judge.service" /lib/systemd/system/judge.service
+    install -m 0755 "$tmp_dir/judge.sh" "$BIN_DIR/judge.sh"
+    sudo install -m 0644 "$tmp_dir/kiosk.service" /lib/systemd/system/kiosk.service
+    install -m 0755 "$tmp_dir/kiosk.sh" "$BIN_DIR/kiosk.sh"
+    install -m 0755 "$tmp_dir/fetch_update.sh" /home/judge/fetch_update.sh
+    install -m 0644 "$tmp_dir/ajdesktop.png" /home/judge/ajdesktop.png
+    install -m 0644 "$tmp_dir/settings_readme.md" "$INSTALL_DIR/settings_readme.md"
+
+    sudo systemctl daemon-reload
+
+    if DISPLAY=:0 XAUTHORITY=/home/judge/.Xauthority pcmanfm --set-wallpaper /home/judge/ajdesktop.png --wallpaper-mode=stretch; then
+        echo "Desktop wallpaper configured."
+    else
+        echo "WARNING: Desktop image was installed, but wallpaper configuration did not complete."
+        echo "This can happen when no desktop session is active over SSH."
+    fi
+}
+
+install_release_assets() {
+    step "7/10" "Installing latest AeroJudge release assets"
+
+    /home/judge/fetch_update.sh --download-only
+    /home/judge/fetch_update.sh --install
+}
+
+enable_services() {
+    step "8/10" "Enabling services"
+
+    sudo systemctl enable judge.service
+    sudo systemctl enable kiosk.service
+}
+
+validate_install() {
+    step "9/10" "Validating installed files and services"
+
+    [ -s "$BIN_DIR/judge.jar" ] || fail "$BIN_DIR/judge.jar is missing."
+    [ -s "$INSTALL_DIR/figures/en/audio/instructions.mp3" ] || fail "Figures/audio assets are missing."
+    [ -s /var/opt/volume_service/volume.py ] || fail "Volume service script is missing."
+    [ -s /var/opt/volume_service/tone-up.wav ] || fail "Volume tone-up file is missing."
+    [ -s /var/opt/volume_service/tone-down.wav ] || fail "Volume tone-down file is missing."
+    [ -s /etc/systemd/system/volume.service ] || fail "Volume service unit is missing."
+
+    python3 -c "import evdev" || fail "python3-evdev is not available."
+    amixer scontrols | grep -q "'PCM'" || fail "ALSA PCM mixer control was not found."
+    amixer get PCM >/dev/null || fail "Could not read ALSA PCM mixer control."
+
+    systemctl is-enabled judge.service >/dev/null || fail "judge.service is not enabled."
+    systemctl is-enabled kiosk.service >/dev/null || fail "kiosk.service is not enabled."
+    systemctl is-enabled volume.service >/dev/null || fail "volume.service is not enabled."
+
+    echo "Install validation passed."
+}
+
+finish() {
+    step "10/10" "Setup complete"
+
+    echo
+    echo -e "${GREEN}AeroJudge Device setup completed.${NC}"
+    echo
+    echo "A reboot is required so /boot/config.txt hardware settings take effect."
+    echo "After reboot, validate:"
+    echo "  - kiosk opens AeroJudge"
+    echo "  - http://<pi-ip>:8080 loads from another machine"
+    echo "  - fresh device opens /newcomp"
+    echo "  - Set Line and Judge number"
+    echo "Load event from score to validate:"
+    echo "  - GPIO scoring buttons work"
+    echo "  - volume thumbwheel works"
+    echo "  - audio playback works"
+    echo "  - shutdown/poweroff behavior works"
+    echo
+    echo "Settings file: $SETTINGS_FILE"
+    echo "Setup log: $LOG_FILE"
+    echo
+    read -r -p "Reboot now? [y/N] " reboot_now
+    case "$reboot_now" in
+        [Yy]|[Yy][Ee][Ss])
+            sudo reboot
+            ;;
+        *)
+            echo "Reboot skipped. Run: sudo reboot"
+            ;;
+    esac
+}
+
+confirm_target
+verify_target
+install_packages
+verify_network_access
+install_boot_config
+create_settings
+install_runtime_files
+install_release_assets
+enable_services
+validate_install
+finish
