@@ -231,8 +231,26 @@ install_runtime_files() {
 install_release_assets() {
     step "7/10" "Installing latest AeroJudge release assets"
 
-    /home/judge/fetch_update.sh --download-only
-    /home/judge/fetch_update.sh --install
+    run_update_phase --download-only
+    run_update_phase --install
+}
+
+run_update_phase() {
+    local mode="$1"
+    local exit_code
+
+    set +e
+    /home/judge/fetch_update.sh "$mode"
+    exit_code=$?
+    set -e
+
+    case "$exit_code" in
+        0|2)
+            ;;
+        *)
+            fail "fetch_update.sh $mode failed with exit code $exit_code."
+            ;;
+    esac
 }
 
 enable_services() {
