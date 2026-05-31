@@ -25,6 +25,7 @@ HEALTH_RETRIES=30
 HEALTH_INTERVAL=5
 VERSION_FILE="/home/judge/.judge_last_release"
 MODE="$1"
+RELEASE_API_URL="${AEROJUDGE_RELEASE_API_URL:-https://api.github.com/repos/AeroJudge/aerojudge-device-app/releases/latest}"
 
 # ---- Shared functions -------------------------------------------------------
 
@@ -116,7 +117,7 @@ do_download() {
 
     last_release=$(cat "$VERSION_FILE")
 
-    latest_release=$(curl --silent --fail -G https://api.github.com/repos/AeroJudge/aerojudge-device-app/releases/latest)
+    latest_release=$(curl --silent --fail -G "$RELEASE_API_URL")
     if [ $? -ne 0 ]; then
         echo "Error fetching latest release (no internet?)!" >&2
         return 1
