@@ -272,8 +272,8 @@ validate_install() {
     [ -s /etc/systemd/system/volume.service ] || fail "Volume service unit is missing."
 
     python3 -c "import evdev" || fail "python3-evdev is not available."
-    amixer scontrols | grep -q "'PCM'" || fail "ALSA PCM mixer control was not found."
-    amixer get PCM >/dev/null || fail "Could not read ALSA PCM mixer control."
+    sudo amixer scontrols | grep -q "'PCM'" || fail "ALSA PCM mixer control was not found for the root/system mixer."
+    sudo amixer get PCM >/dev/null || fail "Could not read ALSA PCM mixer control from the root/system mixer."
 
     systemctl is-enabled judge.service >/dev/null || fail "judge.service is not enabled."
     systemctl is-enabled kiosk.service >/dev/null || fail "kiosk.service is not enabled."
