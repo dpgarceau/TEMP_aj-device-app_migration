@@ -34,7 +34,7 @@ Legacy builders and older hardware should continue to use the legacy IMAC-ORG co
 ## Requirements
 1. VSCode
 2. Docker Desktop
-3. Score =>v4.70 with services enabled and started
+3. Score =>v4.71 with services enabled and started
 4. Java 17 or later (Java 21 works fine)
 
 ## RUN AeroJudge Device App
@@ -51,6 +51,7 @@ eg.
   "score_host":"192.168.8.100",
   "score_http_port":80,
   "language":"en"
+  "seasonYear":"26"
 }
 ```
 4. Running the app in the dev container
