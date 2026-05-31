@@ -4,11 +4,12 @@ These instructions describe the current supported fresh SD card path for
 AeroJudge Device App devices.
 
 The current device setup path is Raspberry Pi OS Bullseye using
-`scripts/judge_setup.sh`. The Bookworm migration notes in `.idea/` are only an
-assessment and are not the active build process.
+`scripts/judge_setup.sh`.
 
 This setup is for AeroJudge devices with serial numbers above `DPG-100` and PCB
 revision `3.5x` or newer.
+
+For the previous project README, see `README_legacy.md`.
 
 ## Build A Fresh Device Card
 
@@ -19,7 +20,8 @@ revision `3.5x` or newer.
    - Username: `judge`
    - Password: `P@ssword1234$`
    - SSH: enabled
-   - WiFi: configured for the target network
+   - WiFi SSID: `AeroJudgeNET`
+   - WiFi password: `2Pr1v@TE`
    - Locale, keyboard, and timezone for the device location
 
 3. Boot the Raspberry Pi from the new SD card.
@@ -108,7 +110,7 @@ After the reboot, validate the card on the actual device hardware:
 ## Notes
 
 - This process is for the current Bullseye-based device setup.
-- Do not treat the Bookworm migration assessment as active setup instructions.
+- For the previous project README, see `README_legacy.md`.
 - The older manual setup sections in `scripts/README.md` are stale and should
   not be used as the primary source for a fresh card.
 - Settings moved from `/boot/settings.json` to
