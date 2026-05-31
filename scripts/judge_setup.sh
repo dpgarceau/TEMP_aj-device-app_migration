@@ -239,10 +239,11 @@ run_update_phase() {
     local mode="$1"
     local exit_code
 
-    set +e
-    /home/judge/fetch_update.sh "$mode"
-    exit_code=$?
-    set -e
+    if /home/judge/fetch_update.sh "$mode"; then
+        exit_code=0
+    else
+        exit_code=$?
+    fi
 
     case "$exit_code" in
         0|2)
