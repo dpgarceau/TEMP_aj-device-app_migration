@@ -151,14 +151,32 @@ create_settings() {
     local score_poll_timeout="2"
     local score_timeout="10"
     local season_year
+    local confirm_year
 
     while true; do
-        echo -e "${BLUE}Enter two digit season year, for example 26:${NC}"
+        echo -e "${BLUE}Enter two digit season year, for 2026 enter 26:${NC}"
         read -r season_year
-        if [[ "$season_year" =~ ^[0-9]{2}$ ]]; then
-            break
+
+        if [[ ! "$season_year" =~ ^[2-3][0-9]$ ]]; then
+            echo "Season year must be two digits from 20 through 39."
+            continue
         fi
-        echo "Season year must be exactly two digits."
+
+        while true; do
+            read -r -p "Season year entered: $season_year. Is this correct? [y/n] " confirm_year
+            case "$confirm_year" in
+                [Yy]|[Yy][Ee][Ss])
+                    break 2
+                    ;;
+                [Nn]|[Nn][Oo])
+                    echo "Re-enter season year."
+                    break
+                    ;;
+                *)
+                    echo "Please answer y or n."
+                    ;;
+            esac
+        done
     done
 
     echo
