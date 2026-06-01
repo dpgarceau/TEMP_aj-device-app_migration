@@ -24,9 +24,6 @@ Validated:
 - Score connectivity and test sync worked
 - root/system `PCM` mixer was available with `sudo amixer get PCM`
 - volume service monitored TS43 input devices
-
-Pending assembled-device hardware validation:
-
 - GPIO scoring buttons
 - volume thumbwheel physical behavior
 - audio through the device amp
