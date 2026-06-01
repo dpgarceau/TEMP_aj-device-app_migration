@@ -43,7 +43,7 @@ The base image should include:
 - WiFi configured for `AeroJudgeNET`
 - desktop update prompts disabled
 - desktop Wastebasket hidden
-- `/home/judge/run_aerojudge_setup.sh`, a small launcher that fetches and runs
+- `/home/judge/build_aerojudge.sh`, a small launcher that fetches and runs
   the current `judge_setup.sh`
 
 The base image should not include app install state:
@@ -96,7 +96,7 @@ Production branch:
 
 ```sh
 cd /home/judge
-./run_aerojudge_setup.sh
+./build_aerojudge.sh
 ```
 
 Test branch:
@@ -105,7 +105,7 @@ Test branch:
 cd /home/judge
 export AEROJUDGE_RAW_BASE_URL="https://raw.githubusercontent.com/<owner>/<repo>/refs/heads/<branch>"
 export AEROJUDGE_RELEASE_API_URL="https://api.github.com/repos/<owner>/<repo>/releases/latest"
-./run_aerojudge_setup.sh
+./build_aerojudge.sh
 ```
 
 The launcher exports those values before running `judge_setup.sh`, so the setup
