@@ -108,6 +108,9 @@ export AEROJUDGE_RELEASE_API_URL="https://api.github.com/repos/<owner>/<repo>/re
 ./run_aerojudge_setup.sh
 ```
 
+The launcher exports those values before running `judge_setup.sh`, so the setup
+script, update fetcher, and release installer all use the same test endpoints.
+
 The setup script will:
 
 - verify Bullseye, 32-bit, and user `judge`
