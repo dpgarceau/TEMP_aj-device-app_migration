@@ -202,8 +202,7 @@ create_settings() {
     echo "  seasonYear: $season_year"
     echo
 
-    sudo mkdir -p "$BIN_DIR"
-    mkdir -p "$INSTALL_DIR/pilots/scores"
+    sudo mkdir -p "$BIN_DIR" "$INSTALL_DIR/pilots/scores"
     sudo chown -R judge:judge "$INSTALL_DIR"
 
     cat > /tmp/aerojudge-settings.json <<EOF
