@@ -1,118 +1,77 @@
-# AeroJudge Device SD Card Build
+# AeroJudge Device App
 
-These instructions describe the current supported fresh SD card path for
-AeroJudge Device App devices.
+## Project Direction
 
-The current device setup path is Raspberry Pi OS Bullseye using
-`scripts/judge_setup.sh`.
+This repository is being prepared to become the AeroJudge Device App: the judging application for current official AeroJudge Device hardware.
 
-This setup is for AeroJudge devices with serial numbers above `DPG-100` and PCB
-revision `3.5x` or newer.
+The forward path has two main goals:
 
-For the previous project README, see `README_legacy.md`.
+1. Rename and re-version the application as AeroJudge Device App / AeroJudge Device so it is clearly distinct from other AeroJudge projects.
+2. Align setup scripts, device configuration, and hardware support with the current physical AeroJudge Device product.
 
-## Build A Fresh Device Card
+Changes will be made through focused branches and reviewed before merging to `main`. The intent is to avoid broad live edits on `main` and keep identity, release, setup, and hardware changes separated enough to review safely.
 
-1. Flash Raspberry Pi OS 32-bit Desktop Bullseye with Raspberry Pi Imager.
+## Project Origin
 
-2. In Raspberry Pi Imager advanced settings, configure:
+AeroJudge Device App is a continuation of the former IMAC Judge App maintained at https://github.com/IMAC-ORG/imac-judge-app.
 
-   - Username: `judge`
-   - Password: `P@ssword1234$`
-   - SSH: enabled
-   - WiFi SSID: `AeroJudgeNET`
-   - WiFi password: `2Pr1v@TE`
-   - Locale, keyboard, and timezone for the device location
+The AeroJudge repository starts from a clean import after package, build, script, and branding updates. Its transition point from the legacy repository is commit `8afe8c603a5140964fed9d7897ab8b53aea4d9b5` (`v2.1.2-rc3-38-g8afe8c6`).
 
-3. Boot the Raspberry Pi from the new SD card.
+## Legacy IMAC-ORG Archive Plan
 
-4. SSH into the Pi as `judge`.
+The legacy IMAC-ORG code path should be preserved as an archive or mirror so it is not lost if the upstream repository changes or disappears.
 
-5. Download and run the AeroJudge setup script:
+That archive is for preservation and reference. This repository's `main` branch should not actively maintain legacy IMAC-ORG derived hardware support unless a specific future decision changes that policy.
 
-   ```sh
-   cd /home/judge
-   wget -O judge_setup.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge_setup.sh
-   chmod +x judge_setup.sh
-   ./judge_setup.sh
-   ```
+Legacy builders and older hardware should continue to use the legacy IMAC-ORG code path. Current AeroJudge Device App work should target current official AeroJudge Device hardware.
 
-6. Confirm the hardware target when prompted.
+# For AeroJudge setup instruction please take a look here
+## https://github.com/AeroJudge/aerojudge-device-app/tree/main/scripts
 
-7. Enter the season year when prompted.
 
-   The setup script defaults these values:
+# For developer environment please look below
 
-   - Judge ID: `1`
-   - Flight Line: `1`
-   - Score IP: `192.168.8.100`
-   - Score Port: `80`
+## Requirements
+1. VSCode
+2. Docker Desktop
+3. Score =>v4.71 with services enabled and started
+4. Java 17 or later (Java 21 works fine)
 
-8. Let the setup script complete. It installs system packages, applies the
-   AeroJudge boot configuration, installs the service files, and runs the update
-   fetcher to install the current release assets.
-
-9. When prompted, choose whether to reboot immediately. A reboot is required
-   before the boot configuration and hardware services are fully active.
-
-## Testing A Branch Before Merge
-
-When testing an unmerged setup branch, download the script from that branch and
-point the script at the same raw branch URL:
-
-```sh
-cd /home/judge
-export AEROJUDGE_RAW_BASE_URL="https://raw.githubusercontent.com/<owner>/<repo>/<branch>"
-wget -O judge_setup.sh "$AEROJUDGE_RAW_BASE_URL/scripts/judge_setup.sh"
-chmod +x judge_setup.sh
-./judge_setup.sh
+## RUN AeroJudge Device App
+1. Open in a dev container
+2. Open new terminal
+3. Edit the /var/opt/judge/settings.json file with correct host_ip and port that Score is running on. The file is mounted from the .devcontainer/judge folder and can be modified there instead.
 ```
+sudo vi /var/opt/judge/settings.json
 
-## What The Setup Script Installs
+eg.
+{
+  "judge_id":1,
+  "line_number":1,
+  "score_host":"192.168.8.100",
+  "score_http_port":80,
+  "language":"en"
+  "seasonYear":"26"
+}
+```
+4. Running the app in the dev container
+```
+cd /workspace
+mvn spring-boot:run
+```
+5. Connecting to the dev container can be done in your local browser http://locahost:8080
 
-The current `scripts/judge_setup.sh` flow:
+## Build AeroJudge Device App
+1. To build the jar file to be deployed to the PI-SCORE unit.
+```
+cd judge/
+./mvnw clean package
+```
+Binary {build}.jar located in judge/target folder needs to be copied to the device and extracted in /var/opt/judge/bin
+Also {build}-figures.zip file needs to be copied to the device and extracted in /var/opt/judge
 
-- verifies the install is running on Bullseye, 32-bit, as user `judge`
-- exits if existing AeroJudge install state is found
-- installs required OS packages, including `python3-evdev` and `evtest`
-- preserves `/boot/config.txt` as `/boot/config.txt.before-aerojudge`
-- installs the AeroJudge boot configuration to `/boot/config.txt`
-- creates `/var/opt/judge/settings.json`
-- installs `judge.service`
-- installs `kiosk.service`
-- installs `/home/judge/fetch_update.sh`
-- installs the AeroJudge desktop image
-- runs `/home/judge/fetch_update.sh --download-only`
-- runs `/home/judge/fetch_update.sh --install`
-- validates required release assets, audio assets, and service enablement
-
-The update flow installs release assets into `/var/opt/judge`, including:
-
-- `judge.jar`
-- `figures.zip`
-- `volume_service.zip`
-
-## Validation Checklist
-
-After the reboot, validate the card on the actual device hardware:
-
-- AeroJudge opens in the local kiosk.
-- `http://<pi-ip>:8080` loads from another machine on the network.
-- `/var/opt/judge/settings.json` contains the expected judge, line, Score, and
-  season settings.
-- GPIO buttons perform the correct scoring actions.
-- Volume thumbwheel controls audio volume.
-- Audio playback works.
-- Shutdown and poweroff behavior works.
-- Score connectivity works.
-- A test sync to Score succeeds.
-
-## Notes
-
-- This process is for the current Bullseye-based device setup.
-- For the previous project README, see `README_legacy.md`.
-- The older manual setup sections in `scripts/README.md` are stale and should
-  not be used as the primary source for a fresh card.
-- Settings moved from `/boot/settings.json` to
-  `/var/opt/judge/settings.json`. Some values can be adjusted through admin
-  screens; full editing is available over SSH.
+## RUN AeroJudge Device App as a docker container (very similar to running in device)
+1. Build AeroJudge Device App using above instructions
+2. Right-click Dockerfile in root folder and choose Build Image... and name tag aerojudge-device-app:latest
+3. In terminal run: docker run -p 8080:8080 aerojudge-device-app:latest
+4. Connecting to the image can be done in your local browser http://locahost:8080
