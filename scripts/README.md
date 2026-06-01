@@ -118,6 +118,7 @@ The setup script will:
 
 - verify Bullseye, 32-bit, and user `judge`
 - refuse to run if existing AeroJudge install state is found
+- expand the root filesystem to use the available SD card space
 - install required packages
 - install the AeroJudge boot config to `/boot/config.txt`
 - create `/var/opt/judge/settings.json`

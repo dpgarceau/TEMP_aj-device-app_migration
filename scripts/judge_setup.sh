@@ -68,7 +68,7 @@ confirm_target() {
 }
 
 verify_target() {
-    step "1/10" "Verifying target OS, user, and fresh install state"
+    step "1/11" "Verifying target OS, user, and fresh install state"
 
     [ -f /etc/os-release ] || fail "/etc/os-release not found."
     # shellcheck disable=SC1091
@@ -88,8 +88,19 @@ verify_target() {
     echo "User: $(id -un)"
 }
 
+expand_root_filesystem() {
+    step "2/11" "Expanding root filesystem"
+
+    if command -v raspi-config >/dev/null 2>&1; then
+        sudo raspi-config --expand-rootfs || fail "Root filesystem expansion failed."
+        echo "Root filesystem expansion requested. Final resize may complete after reboot."
+    else
+        fail "raspi-config is not available; cannot expand root filesystem."
+    fi
+}
+
 install_packages() {
-    step "2/10" "Installing required packages"
+    step "3/11" "Installing required packages"
 
     sudo apt update
     sudo apt install -y \
@@ -114,7 +125,7 @@ install_packages() {
 }
 
 verify_network_access() {
-    step "3/10" "Verifying repository and release access"
+    step "4/11" "Verifying repository and release access"
 
     local config_url="$RAW_BASE_URL/scripts/config.txt"
 
@@ -126,7 +137,7 @@ verify_network_access() {
 }
 
 install_boot_config() {
-    step "4/10" "Installing AeroJudge boot config"
+    step "5/11" "Installing AeroJudge boot config"
 
     local tmp_config="/tmp/aerojudge-config.txt"
 
@@ -141,7 +152,7 @@ install_boot_config() {
 }
 
 create_settings() {
-    step "5/10" "Creating device settings"
+    step "6/11" "Creating device settings"
 
     local judge_id="1"
     local line_number="1"
@@ -215,7 +226,7 @@ EOF
 }
 
 install_runtime_files() {
-    step "6/10" "Installing services, scripts, and desktop image"
+    step "7/11" "Installing services, scripts, and desktop image"
 
     local tmp_dir="/tmp/aerojudge-setup-files"
     rm -rf "$tmp_dir"
@@ -278,7 +289,7 @@ disable_desktop_update_prompts() {
 }
 
 install_release_assets() {
-    step "7/10" "Installing latest AeroJudge release assets"
+    step "8/11" "Installing latest AeroJudge release assets"
 
     run_update_phase --download-only
     run_update_phase --install
@@ -304,14 +315,14 @@ run_update_phase() {
 }
 
 enable_services() {
-    step "8/10" "Enabling services"
+    step "9/11" "Enabling services"
 
     sudo systemctl enable judge.service
     sudo systemctl enable kiosk.service
 }
 
 validate_install() {
-    step "9/10" "Validating installed files and services"
+    step "10/11" "Validating installed files and services"
 
     [ -s "$BIN_DIR/judge.jar" ] || fail "$BIN_DIR/judge.jar is missing."
     [ -s "$INSTALL_DIR/figures/en/audio/instructions.mp3" ] || fail "Figures/audio assets are missing."
@@ -334,7 +345,7 @@ validate_install() {
 }
 
 finish() {
-    step "10/10" "Setup complete"
+    step "11/11" "Setup complete"
 
     echo
     echo -e "${GREEN}AeroJudge Device setup completed.${NC}"
@@ -367,6 +378,7 @@ finish() {
 
 confirm_target
 verify_target
+expand_root_filesystem
 install_packages
 verify_network_access
 install_boot_config
