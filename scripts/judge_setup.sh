@@ -158,7 +158,7 @@ create_settings() {
         read -r season_year
 
         if [[ ! "$season_year" =~ ^[2-3][0-9]$ ]]; then
-            echo "Season year must be two digits from 20 through 39."
+            echo "Season year must be two digits."
             continue
         fi
 
@@ -192,6 +192,7 @@ create_settings() {
     echo
 
     sudo mkdir -p "$BIN_DIR"
+    mkdir -p "$INSTALL_DIR/pilots/scores"
     sudo chown -R judge:judge "$INSTALL_DIR"
 
     cat > /tmp/aerojudge-settings.json <<EOF
@@ -314,6 +315,8 @@ validate_install() {
 
     [ -s "$BIN_DIR/judge.jar" ] || fail "$BIN_DIR/judge.jar is missing."
     [ -s "$INSTALL_DIR/figures/en/audio/instructions.mp3" ] || fail "Figures/audio assets are missing."
+    [ -d "$INSTALL_DIR/pilots" ] || fail "$INSTALL_DIR/pilots directory is missing."
+    [ -d "$INSTALL_DIR/pilots/scores" ] || fail "$INSTALL_DIR/pilots/scores directory is missing."
     [ -s /var/opt/volume_service/volume.py ] || fail "Volume service script is missing."
     [ -s /var/opt/volume_service/tone-up.wav ] || fail "Volume tone-up file is missing."
     [ -s /var/opt/volume_service/tone-down.wav ] || fail "Volume tone-down file is missing."
