@@ -217,6 +217,7 @@ install_runtime_files() {
     install -m 0755 "$tmp_dir/fetch_update.sh" /home/judge/fetch_update.sh
     install -m 0644 "$tmp_dir/ajdesktop.png" /home/judge/ajdesktop.png
     install -m 0644 "$tmp_dir/settings_readme.md" "$INSTALL_DIR/settings_readme.md"
+    hide_desktop_wastebasket
 
     sudo systemctl daemon-reload
 
@@ -226,6 +227,24 @@ install_runtime_files() {
         echo "WARNING: Desktop image was installed, but wallpaper configuration did not complete."
         echo "This can happen when no desktop session is active over SSH."
     fi
+}
+
+hide_desktop_wastebasket() {
+    local pcmanfm_config_dir="/home/judge/.config/pcmanfm/LXDE-pi"
+    local desktop_config="$pcmanfm_config_dir/desktop-items-0.conf"
+
+    mkdir -p "$pcmanfm_config_dir"
+
+    if [ ! -s "$desktop_config" ]; then
+        printf "[*]\nshow_trash=0\n" > "$desktop_config"
+    elif grep -q "^show_trash=" "$desktop_config"; then
+        sed -i "s/^show_trash=.*/show_trash=0/" "$desktop_config"
+    else
+        printf "\nshow_trash=0\n" >> "$desktop_config"
+    fi
+
+    chown -R judge:judge /home/judge/.config/pcmanfm
+    echo "Desktop Wastebasket icon hidden."
 }
 
 install_release_assets() {
