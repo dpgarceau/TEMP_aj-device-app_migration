@@ -35,14 +35,25 @@ The setup process should move to an AeroJudge-prepared Bullseye base image.
 That image should be stored outside the repo, with a download link and SHA256
 recorded here when available.
 
+Current base image artifact:
+
+```text
+Filename: aerojudge-bullseye-base-2026-06-01.img.gz
+Compressed size: 1.4 GB
+SHA256: 18DDE9C73FC813E72865E6BEFB3B2BC8827302C3FA82D53C9EDC9BACE9ED9ACB
+R2 URL: pending upload
+```
+
+This image was created from the official Raspberry Pi OS Bullseye 32-bit
+Desktop image, configured only enough to reach SSH reliably, then shrunk and
+compressed with PiShrink.
+
 The base image should include:
 
 - known-good Raspberry Pi OS Bullseye 32-bit Desktop
 - `judge` user and password
 - SSH enabled
 - WiFi configured for `AeroJudgeNET`
-- desktop update prompts disabled
-- desktop Wastebasket hidden
 - `/home/judge/build_aerojudge.sh`, a small launcher that fetches and runs
   the current `judge_setup.sh`
 
@@ -52,6 +63,8 @@ The base image should not include app install state:
 - no `/var/opt/volume_service`
 - no `/home/judge/.judge_last_release`
 - no `/boot/config.txt.before-aerojudge`
+- no AeroJudge boot config, services, packages, desktop cleanup, or release
+  assets; those are installed by `judge_setup.sh`
 
 This keeps OS/bootstrap work repeatable while still allowing `judge_setup.sh`
 to pull the latest setup logic, boot config, services, `judge.jar`, figures, and
