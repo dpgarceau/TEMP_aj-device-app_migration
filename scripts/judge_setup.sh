@@ -218,6 +218,7 @@ install_runtime_files() {
     install -m 0644 "$tmp_dir/ajdesktop.png" /home/judge/ajdesktop.png
     install -m 0644 "$tmp_dir/settings_readme.md" "$INSTALL_DIR/settings_readme.md"
     hide_desktop_wastebasket
+    disable_desktop_update_prompts
 
     sudo systemctl daemon-reload
 
@@ -245,6 +246,16 @@ hide_desktop_wastebasket() {
 
     chown -R judge:judge /home/judge/.config/pcmanfm
     echo "Desktop Wastebasket icon hidden."
+}
+
+disable_desktop_update_prompts() {
+    # Field devices are updated intentionally through AeroJudge release flow or SSH,
+    # not by tapping desktop PackageKit prompts during boot.
+    sudo systemctl disable --now packagekit.service 2>/dev/null || true
+    sudo systemctl mask packagekit.service 2>/dev/null || true
+    sudo systemctl disable --now packagekit-offline-update.service 2>/dev/null || true
+    sudo systemctl mask packagekit-offline-update.service 2>/dev/null || true
+    echo "Desktop PackageKit update prompts disabled."
 }
 
 install_release_assets() {
