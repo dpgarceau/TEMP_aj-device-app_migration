@@ -65,6 +65,8 @@ dtparam=i2c_arm=on
 #dtoverlay=audremap,pins_12_13
 
 # Audio updated to hifiberry-dacplus for AeroJudge headphone amp
+# Hold the active-high headphone amp disabled until the audio service is ready
+gpio=8=op,dl
 dtparam=audio=off
 dtoverlay=hifiberry-dacplus
 
@@ -113,7 +115,7 @@ dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=73  # J13 +1.0 (KP9
 dtoverlay=gpio-key,gpio=22,active_low=1,gpio_pull=up,keycode=75  # J14 BACK (KP4)
 
 # Audio Channel Mapping
-# Configured above in general settings - uses GPIO 12 (PWM0) and GPIO 13 (PWM1)
+# Configured above in general settings - I2S uses GPIO 18, 19, and 21
 
 # Audio Volume Thumbwheel Mapping
 dtoverlay=gpio-key,gpio=9,active_low=1,gpio_pull=up,keycode=114   # Vol Down (terminal 2)
