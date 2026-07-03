@@ -55,7 +55,7 @@ confirm_target() {
     echo
     echo "Target hardware:"
     echo "  - AeroJudge Device serial DPG-100 and above"
-    echo "  - AeroJudge PCB revision v3.5x and above"
+    echo "  - AeroJudge PCB revision 3.6"
     echo "  - Raspberry Pi 4B"
     echo "  - Raspberry Pi OS Bullseye 32-bit Desktop"
     echo
@@ -330,14 +330,27 @@ validate_install() {
     [ -s /var/opt/volume_service/volume.py ] || fail "Volume service script is missing."
     [ -s /var/opt/volume_service/tone-up.wav ] || fail "Volume tone-up file is missing."
     [ -s /var/opt/volume_service/tone-down.wav ] || fail "Volume tone-down file is missing."
+    [ -x /usr/local/sbin/aerojudge-audio-hardware ] || fail "Audio hardware helper is missing or not executable."
+    [ -s /etc/systemd/system/audio-hardware.service ] || fail "Audio hardware service unit is missing."
     [ -s /etc/systemd/system/volume.service ] || fail "Volume service unit is missing."
 
     python3 -c "import evdev" || fail "python3-evdev is not available."
-    sudo amixer scontrols | grep -q "'PCM'" || fail "ALSA PCM mixer control was not found for the root/system mixer."
-    sudo amixer get PCM >/dev/null || fail "Could not read ALSA PCM mixer control from the root/system mixer."
+    python3 -m py_compile /var/opt/volume_service/volume.py || fail "Volume service Python syntax validation failed."
+    sudo /bin/sh -n /usr/local/sbin/aerojudge-audio-hardware || fail "Audio hardware helper syntax validation failed."
+    sudo systemd-analyze verify \
+        /etc/systemd/system/audio-hardware.service \
+        /etc/systemd/system/volume.service || fail "Audio service unit validation failed."
+
+    grep -q '^gpio=8=op,dl$' "$BOOT_CONFIG" || fail "Boot config does not hold GPIO8 output-low."
+    grep -q '^dtparam=audio=off$' "$BOOT_CONFIG" || fail "Boot config does not disable onboard audio."
+    grep -q '^dtoverlay=hifiberry-dacplus$' "$BOOT_CONFIG" || fail "Boot config does not enable the HiFiBerry DAC."
+    if grep -Eq '^[[:space:]]*dtoverlay=gpio-key,gpio=20([,[:space:]]|$)' "$BOOT_CONFIG"; then
+        fail "Boot config enables GPIO20 DEADLINE, which conflicts with the I2S DAC."
+    fi
 
     systemctl is-enabled judge.service >/dev/null || fail "judge.service is not enabled."
     systemctl is-enabled kiosk.service >/dev/null || fail "kiosk.service is not enabled."
+    systemctl is-enabled audio-hardware.service >/dev/null || fail "audio-hardware.service is not enabled."
     systemctl is-enabled volume.service >/dev/null || fail "volume.service is not enabled."
 
     echo "Install validation passed."
@@ -360,6 +373,13 @@ finish() {
     echo "  - volume thumbwheel works"
     echo "  - audio playback works"
     echo "  - shutdown/poweroff behavior works"
+    echo
+    echo "Audio checks after reboot:"
+    echo "  systemctl is-active audio-hardware.service volume.service"
+    echo "  amixer -c sndrpihifiberry get Digital"
+    echo "  raspi-gpio get 8"
+    echo "  pactl info | grep -E 'Server Name|Default Sink'"
+    echo "  journalctl -u audio-hardware.service -u volume.service -n 80 --no-pager"
     echo
     echo "Settings file: $SETTINGS_FILE"
     echo "Setup log: $LOG_FILE"
