@@ -50,12 +50,13 @@ The volume daemon runs as `judge`, which already belongs to the `input` and
 The configured PCB 3.6 behavior is:
 
 - startup: 80%;
-- provisional minimum: 65%;
+- production minimum: 65%;
 - maximum: 100%;
 - normal step: 1%;
 - hold/repeat behavior retained from the previous TS43 user experience.
 
-The 65% minimum still requires final listening validation.
+The 65% minimum passed listening validation and is final unless future user
+feedback requests a change.
 
 ## Audio Feedback
 
