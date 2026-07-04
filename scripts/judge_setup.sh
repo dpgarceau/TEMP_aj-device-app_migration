@@ -247,7 +247,6 @@ install_runtime_files() {
     install -m 0644 "$tmp_dir/ajdesktop.png" /home/judge/ajdesktop.png
     install -m 0644 "$tmp_dir/settings_readme.md" "$INSTALL_DIR/settings_readme.md"
     hide_desktop_wastebasket
-    disable_desktop_update_prompts
 
     sudo systemctl daemon-reload
 
@@ -398,6 +397,7 @@ finish() {
 confirm_target
 verify_target
 expand_root_filesystem
+disable_desktop_update_prompts
 install_packages
 verify_network_access
 install_boot_config
