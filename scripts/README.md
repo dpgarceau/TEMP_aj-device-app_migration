@@ -1,118 +1,38 @@
 # AeroJudge Device SD Card Setup
 
-These instructions are for current AeroJudge Device hardware only:
+These instructions are for current AeroJudge Device hardware:
 
 - serial numbers above `DPG-100`
-- PCB revision `3.5x` or newer
-- Raspberry Pi OS Bullseye 32-bit Desktop
-- user `judge`
+- PCB revision `3.6`
+- Raspberry Pi 4B
 
-The previous scripts README is preserved as `scripts/README_legacy.md`.
+The supported installation path uses the prepared AeroJudge base image. 
 
-## Current Status
+## Install a Device
 
-The fresh setup script has been bench-tested from the
-`test/fresh-device-setup` branch on a Bullseye 32-bit device.
+1. Download the current AeroJudge Device image from:
 
-Validated:
+   <https://aero-judge.com/device-images.php>
 
-- setup script completed through reboot
-- kiosk opened AeroJudge at `newcomp.html`
-- `judge.service`, `kiosk.service`, and `volume.service` were active/enabled
-- `http://<pi-ip>:8080` loaded from another machine
-- app health returned `{"status":"UP"}`
-- Score connectivity and test sync worked
-- root/system `PCM` mixer was available with `sudo amixer get PCM`
-- volume service monitored TS43 input devices
-- GPIO scoring buttons
-- volume thumbwheel physical behavior
-- audio through the device amp
-- shutdown/poweroff behavior
+2. Use Raspberry Pi Imager to write the downloaded image to the SD card.
 
-## Preferred Production Direction
+3. Insert the card into the AeroJudge Device and boot it.
 
-The setup process should move to an AeroJudge-prepared Bullseye base image.
-That image should be stored outside the repo, with a download link and SHA256
-recorded here when available.
+4. Connect to the device as user `judge`, then run:
 
-Current base image artifact:
+   ```sh
+   cd /home/judge
+   ./build_aerojudge.sh
+   ```
 
-```text
-Filename: aerojudge-bullseye-base-2026-06-01.img.gz
-Compressed size: 1.4 GB
-SHA256: 18DDE9C73FC813E72865E6BEFB3B2BC8827302C3FA82D53C9EDC9BACE9ED9ACB
-R2 URL: pending upload
-```
+The launcher downloads and runs the current production `judge_setup.sh`. The
+setup asks for device-specific settings, installs the application and services,
+validates the result, and offers to reboot.
 
-This image was created from the official Raspberry Pi OS Bullseye 32-bit
-Desktop image, configured only enough to reach SSH reliably, then shrunk and
-compressed with PiShrink.
+## Test an Unreleased Setup Script
 
-The base image should include:
-
-- known-good Raspberry Pi OS Bullseye 32-bit Desktop
-- `judge` user and password
-- SSH enabled
-- WiFi configured for `AeroJudgeNET`
-- `/home/judge/build_aerojudge.sh`, a small launcher that fetches and runs
-  the current `judge_setup.sh`
-
-The base image should not include app install state:
-
-- no `/var/opt/judge`
-- no `/var/opt/volume_service`
-- no `/home/judge/.judge_last_release`
-- no `/boot/config.txt.before-aerojudge`
-- no AeroJudge boot config, services, packages, desktop cleanup, or release
-  assets; those are installed by `judge_setup.sh`
-
-This keeps OS/bootstrap work repeatable while still allowing `judge_setup.sh`
-to pull the latest setup logic, boot config, services, `judge.jar`, figures, and
-volume service from the release flow.
-
-## Current Manual/Test Path
-
-Until the prepared base image exists, start from the official Raspberry Pi OS
-Bullseye 32-bit Desktop image for Raspberry Pi hardware.
-
-Important: do not use the "Raspberry Pi Desktop" image marked compatible with
-PC and Mac. That is not the Raspberry Pi device image.
-
-The known tested image was:
-
-```text
-2025-05-06-raspios-bullseye-armhf.img.xz
-```
-
-Official download path used during testing:
-
-```text
-https://downloads.raspberrypi.com/raspios_oldstable_armhf/images/raspios_oldstable_armhf-2025-05-07/2025-05-06-raspios-bullseye-armhf.img.xz
-```
-
-Configure first-boot access so the device can be reached by SSH as:
-
-```text
-user: judge
-password: P@ssword1234$
-WiFi SSID: AeroJudgeNET
-WiFi password: 2Pr1v@TE
-```
-
-Current devices have a screen but no keyboard, so first-boot access must be
-solved before the setup script can run. A repeatable Phase 0 helper or base
-image is still needed.
-
-## Run Setup
-
-Production branch:
-
-```sh
-cd /home/judge
-./build_aerojudge.sh
-```
-
-Test branch:
+To test the setup code from another repository or branch, override both source
+endpoints before running the launcher:
 
 ```sh
 cd /home/judge
@@ -121,26 +41,41 @@ export AEROJUDGE_RELEASE_API_URL="https://api.github.com/repos/<owner>/<repo>/re
 ./build_aerojudge.sh
 ```
 
+For this repository's `test/fresh-device-setup` branch:
+
+```sh
+cd /home/judge
+export AEROJUDGE_RAW_BASE_URL="https://raw.githubusercontent.com/dpgarceau/TEMP_aj-device-app_migration/refs/heads/test/fresh-device-setup"
+export AEROJUDGE_RELEASE_API_URL="https://api.github.com/repos/dpgarceau/TEMP_aj-device-app_migration/releases/latest"
+./build_aerojudge.sh
+```
+
 The launcher exports those values before running `judge_setup.sh`, so the setup
-script, update fetcher, and release installer all use the same test endpoints.
+script, update fetcher, and release installer use the same test endpoints.
+The release endpoint must contain a `volume_service.zip` built from the same
+PCB 3.6 implementation; changing only the raw branch URL does not change
+release assets.
 
-The setup script will:
+## What Setup Installs
 
-- verify Bullseye, 32-bit, and user `judge`
-- refuse to run if existing AeroJudge install state is found
-- expand the root filesystem to use the available SD card space
-- install required packages
-- install the AeroJudge boot config to `/boot/config.txt`
-- create `/var/opt/judge/settings.json`
-- create `/var/opt/judge/pilots/scores`
-- install `judge.service`, `kiosk.service`, and `fetch_update.sh`
-- install the AeroJudge desktop image
-- hide the desktop Wastebasket
-- disable PackageKit desktop update prompts
-- fetch and install release assets
-- validate services, release assets, audio assets, runtime directories, and the
-  root/system `PCM` mixer
-- ask whether to reboot
+The setup script:
+
+- verifies Bullseye, 32-bit, and user `judge`
+- refuses to run if existing AeroJudge install state is found
+- expands the root filesystem to use the available SD card space
+- installs required packages
+- installs the AeroJudge boot configuration
+- creates `/var/opt/judge/settings.json`
+- creates `/var/opt/judge/pilots/scores`
+- installs `judge.service`, `kiosk.service`, and `fetch_update.sh`
+- installs and enables `audio-hardware.service` and `volume.service`
+- installs the AeroJudge desktop image
+- hides the desktop Wastebasket
+- disables PackageKit desktop update prompts
+- fetches and installs release assets
+- validates services, release assets, audio assets, runtime directories, and
+  the PCB 3.6 boot configuration
+- asks whether to reboot
 
 ## Settings
 
@@ -150,14 +85,12 @@ Fresh setup writes settings directly to:
 /var/opt/judge/settings.json
 ```
 
-The old flow used `/boot/settings.json`. Do not use that location for current
-fresh device setup.
+The old flow used `/boot/settings.json`; do not use that location for current
+fresh-device setup.
 
-Current setup prompts for `seasonYear` because existing release tags do not yet
-encode the season year. Future releases are expected to use `vYY.MAJOR.MINOR`
-tags, for example `v26.1.0`; once that versioning is active, setup should derive
-`seasonYear` from the release tag and validate it against figure package
-metadata instead of prompting.
+Setup currently prompts for `seasonYear` because existing release tags do not
+encode the season year. Future `vYY.MAJOR.MINOR` release tags should allow setup
+to derive it and validate it against figure-package metadata.
 
 Default setup values:
 
@@ -174,29 +107,31 @@ Default setup values:
 Run:
 
 ```sh
-systemctl is-active judge.service kiosk.service volume.service
-systemctl is-enabled judge.service kiosk.service volume.service
+systemctl is-active judge.service kiosk.service audio-hardware.service volume.service
+systemctl is-enabled judge.service kiosk.service audio-hardware.service volume.service
 curl -s http://localhost:8080/actuator/health
-sudo amixer get PCM
-journalctl -u volume.service -n 40 --no-pager
+amixer -c sndrpihifiberry get Digital
+raspi-gpio get 8
+pactl info | grep -E 'Server Name|Default Sink'
+journalctl -u audio-hardware.service -u volume.service -n 80 --no-pager
 ls -ld /var/opt/judge/pilots /var/opt/judge/pilots/scores
 cat /var/opt/judge/settings.json
 ```
 
-Then validate on assembled device hardware:
+Then validate on assembled hardware:
 
 - kiosk opens AeroJudge at `newcomp.html`
 - another machine can load `http://<pi-ip>:8080`
 - Score connectivity and test sync work
 - GPIO scoring buttons perform the expected actions
+- PCB 3.6 DEADLINE is unavailable because its GPIO20 route conflicts with I2S
 - volume thumbwheel changes volume
-- audio is audible through the device amp
+- audio is audible through the device amplifier
 - shutdown/poweroff behavior works
 
 ## Known Follow-Ups
 
-- First-boot access needs a repeatable base-image or Phase 0 provisioning helper.
 - `attempt_auto_sync_scores` is currently re-added to `settings.json` by the
   app after startup. That is an app storage bug, not a setup-script setting.
-- Season year should become release-derived once `vYY.MAJOR.MINOR` release
-  tags and figure package metadata are in place.
+- `seasonYear` should become release-derived once `vYY.MAJOR.MINOR` release
+  tags and figure-package metadata are in place.
