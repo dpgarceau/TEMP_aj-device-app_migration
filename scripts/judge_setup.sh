@@ -273,7 +273,14 @@ hide_desktop_wastebasket() {
     fi
 
     chown -R judge:judge /home/judge/.config/pcmanfm
-    echo "Desktop Wastebasket icon hidden."
+
+    if DISPLAY=:0 XAUTHORITY=/home/judge/.Xauthority \
+        pcmanfm --reconfigure --profile LXDE-pi; then
+        echo "Desktop Wastebasket icon hidden."
+    else
+        echo "WARNING: Wastebasket setting was saved, but the desktop did not reload."
+        echo "The setting will apply when the judge desktop next starts."
+    fi
 }
 
 disable_desktop_update_prompts() {
