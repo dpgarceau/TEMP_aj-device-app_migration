@@ -17,7 +17,8 @@
 #   2 = Update successfully applied / assets downloaded and ready
 # =============================================================================
 
-UPDATE_URL="https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge_update.sh"
+RAW_BASE_URL="${AEROJUDGE_RAW_BASE_URL:-https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main}"
+UPDATE_URL="$RAW_BASE_URL/scripts/judge_update.sh"
 
 # Download the update script to a temp file so we can pass arguments to it.
 # The previous `curl | bash` pattern could not forward arguments.

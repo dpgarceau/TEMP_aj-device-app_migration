@@ -25,6 +25,7 @@ HEALTH_RETRIES=30
 HEALTH_INTERVAL=5
 VERSION_FILE="/home/judge/.judge_last_release"
 MODE="$1"
+RELEASE_API_URL="${AEROJUDGE_RELEASE_API_URL:-https://api.github.com/repos/AeroJudge/aerojudge-device-app/releases/latest}"
 
 # ---- Shared functions -------------------------------------------------------
 
@@ -69,7 +70,7 @@ ensure_judge_dir() {
     fi
 }
 
-# Install volume service if not already present.
+# Install the hardware-specific audio stack if not already present.
 # Must be called BEFORE staging directory is cleaned up.
 check_volume_service() {
     if [ ! -d /var/opt/volume_service ]; then
@@ -77,18 +78,45 @@ check_volume_service() {
             VZIP="${STAGING_DIR}/volume_service.zip"
             [ ! -f "$VZIP" ] && VZIP="volume_service.zip"
 
-            echo "Installing and starting volume service..."
+            echo "Installing PCB 3.61+ audio and volume services..."
             sudo mkdir -p /var/opt/volume_service
             sudo chown judge:judge /var/opt/volume_service
             unzip -quoj "$VZIP" -d /var/opt/volume_service/
             rm -f "$VZIP"
 
-            chmod +x /var/opt/volume_service/volume.service
-            sudo mv /var/opt/volume_service/volume.service /etc/systemd/system
-            sudo systemctl enable volume
-            sudo systemctl start volume
+            [ -s /var/opt/volume_service/audio_hardware.sh ] || {
+                echo "Audio hardware helper is missing from volume_service.zip" >&2
+                return 1
+            }
+            [ -s /var/opt/volume_service/audio-hardware.service ] || {
+                echo "audio-hardware.service is missing from volume_service.zip" >&2
+                return 1
+            }
+            [ -s /var/opt/volume_service/volume.service ] || {
+                echo "volume.service is missing from volume_service.zip" >&2
+                return 1
+            }
+
+            sudo install -o root -g root -m 0755 \
+                /var/opt/volume_service/audio_hardware.sh \
+                /usr/local/sbin/aerojudge-audio-hardware
+            sudo install -o root -g root -m 0644 \
+                /var/opt/volume_service/audio-hardware.service \
+                /etc/systemd/system/audio-hardware.service
+            sudo install -o root -g root -m 0644 \
+                /var/opt/volume_service/volume.service \
+                /etc/systemd/system/volume.service
+
+            rm -f \
+                /var/opt/volume_service/audio_hardware.sh \
+                /var/opt/volume_service/audio-hardware.service \
+                /var/opt/volume_service/volume.service
+
+            sudo systemctl daemon-reload
+            sudo systemctl enable audio-hardware.service volume.service
+            echo "Audio services enabled; they will start after the required reboot."
         else
-            echo "Latest release does not include the volume service"
+            echo "Latest release does not include the PCB 3.61+ audio stack"
         fi
     fi
 }
@@ -116,7 +144,7 @@ do_download() {
 
     last_release=$(cat "$VERSION_FILE")
 
-    latest_release=$(curl --silent --fail -G https://api.github.com/repos/AeroJudge/aerojudge-device-app/releases/latest)
+    latest_release=$(curl --silent --fail -G "$RELEASE_API_URL")
     if [ $? -ne 0 ]; then
         echo "Error fetching latest release (no internet?)!" >&2
         return 1
@@ -214,9 +242,9 @@ do_install() {
         echo "Installed figures version $TARGET_VERSION"
     fi
 
-    # Install volume service BEFORE cleaning up staging — it reads
-    # volume_service.zip from the staging directory
-    check_volume_service
+    # Install the hardware-specific audio stack before cleaning up staging;
+    # it reads volume_service.zip from the staging directory.
+    check_volume_service || return 1
 
     echo "Starting services..."
     sudo systemctl start judge.service

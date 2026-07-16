@@ -55,7 +55,7 @@ eg.
 }
 ```
 4. Running the app in the dev container
-``` 
+```
 cd /workspace
 mvn spring-boot:run
 ```

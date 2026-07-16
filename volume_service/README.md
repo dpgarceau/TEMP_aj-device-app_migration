@@ -1,77 +1,117 @@
-# AeroJudge TS43 Volume Service
+# AeroJudge PCB 3.61+ Audio and Volume Services
 
-This is the active volume service for official AeroJudge Device PCB v3.5x / v3.51 hardware.
+This directory contains the hardware-specific audio stack for AeroJudge PCB
+3.61+:
 
-The board uses a Same Sky TS43 thumbwheel switch. GPIO contacts are configured as Linux `gpio-key` overlays in `/boot/config.txt`; this service listens for the resulting `button@...` key events with `evdev` and controls ALSA volume with `amixer`.
+- PCM5122 DAC through the `hifiberry-dacplus` driver;
+- TPA6132A2 amplifier enable on active-high GPIO8;
+- Same Sky TS43 volume-down and volume-up contacts.
+
+PCB 3.5 is not supported by this stack.
 
 ## Runtime Files
 
-- Service script: `/var/opt/volume_service/volume.py`
-- systemd unit: `/etc/systemd/system/volume.service`
-- GPIO mapping: `/boot/config.txt`
-- Audio feedback tones: `/var/opt/volume_service/tone-*.wav`
+- Hardware helper: `/usr/local/sbin/aerojudge-audio-hardware`
+- Hardware unit: `/etc/systemd/system/audio-hardware.service`
+- Volume daemon: `/var/opt/volume_service/volume.py`
+- Volume unit: `/etc/systemd/system/volume.service`
+- Feedback tones: `/var/opt/volume_service/tone-*.wav`
+- GPIO and DAC overlays: `/boot/config.txt`
 
-## Keycodes
+The root-owned hardware helper is installed outside the `judge`-writable
+volume directory.
+
+## Hardware Lifecycle
+
+`audio-hardware.service` keeps GPIO8 low while it waits for ALSA card
+`sndrpihifiberry` and mixer `Digital`.
+
+It checks every 3 seconds for up to 90 seconds. After an unsuccessful attempt,
+it waits 30 seconds and retries until the DAC becomes available. On success it:
+
+1. sets and unmutes `Digital` at 80%;
+2. verifies the mixer;
+3. raises and verifies GPIO8;
+4. leaves GPIO8 high throughout normal operation.
+
+On service stop or orderly shutdown it lowers GPIO8. GPIO8 is not toggled
+between spoken clips.
+
+## TS43 Volume Behavior
+
+The volume daemon runs as `judge`, which already belongs to the `input` and
+`audio` groups. Linux gpio-key overlays produce:
 
 | Keycode | Function |
 |---------|----------|
 | 114 | Volume down |
 | 115 | Volume up |
-| 159 | Volume down fast, when enabled |
-| 160 | Volume up fast, when enabled |
-| 113 | Mute toggle, when enabled |
 
-The current production setup enables slow volume down/up only. Fast volume and mute GPIO lines are present but commented in `scripts/device_setup.sh` until those controls are approved for the production default.
+The configured PCB 3.61+ behavior is:
+
+- startup: 80%;
+- production minimum: 65%;
+- maximum: 100%;
+- normal step: 1%;
+- hold/repeat behavior retained from the previous TS43 user experience.
+
+The 65% minimum passed listening validation and is final unless future user
+feedback requests a change.
 
 ## Audio Feedback
 
-The service plays short WAV tones with `aplay` after volume button presses because the kiosk UI does not show a volume level indicator. At the minimum and maximum, it repeats the same directional tone instead of using a separate limit tone.
+After each applied step, the daemon plays `tone-up.wav` or `tone-down.wav`.
+The tone is played after changing the mixer, so its loudness represents the new
+level. Directional feedback is retained at the configured limits.
 
-| File | Purpose |
-|------|---------|
-| `tone-up.wav` | Volume increased |
-| `tone-down.wav` | Volume decreased |
-The files are packaged with the service and can be tested directly:
+Feedback uses the `judge` user's PulseAudio server:
 
-```bash
-aplay /var/opt/volume_service/tone-up.wav
-aplay /var/opt/volume_service/tone-down.wav
+```text
+XDG_RUNTIME_DIR=/run/user/1000
+PULSE_SERVER=unix:/run/user/1000/pulse/native
 ```
+
+This allows feedback and Chromium speech to mix through the same HiFiBerry
+sink. A feedback failure is logged but does not undo the mixer change.
 
 ## Dependencies
 
-Fresh AeroJudge Device setup installs:
+Fresh setup installs:
 
-```bash
-sudo apt install python3-evdev
+```sh
+sudo apt install alsa-utils python3-evdev evtest
 ```
-
-`amixer` is provided by ALSA utilities on the target Raspberry Pi OS image. The service runs as root and expects the root/system mixer control to be named `PCM`.
-The configured range is 80-100%. The dedicated PCB audio amp path is effectively inaudible below 80% during device testing, and the root PCM mixer reports 100% as its hardware maximum.
-At boot, the service waits briefly for this mixer to appear and systemd restarts it after transient startup failures.
 
 ## Diagnostics
 
-Verify input events:
+```sh
+systemctl status audio-hardware.service volume.service
+systemctl is-enabled audio-hardware.service volume.service
+amixer -c sndrpihifiberry get Digital
+raspi-gpio get 8
+pactl info | grep -E 'Server Name|Default Sink'
+journalctl -u audio-hardware.service -u volume.service -n 80 --no-pager
+```
 
-```bash
-sudo apt install evtest
+Inspect TS43 input events:
+
+```sh
 sudo evtest
 ```
 
-Verify audio control:
+Listening-dependent tone and Chromium mixing tests must be performed with a
+listener available. Stop the hardware service to disable the amplifier:
 
-```bash
-sudo amixer scontrols
-sudo amixer get 'PCM'
+```sh
+sudo systemctl stop audio-hardware.service
 ```
 
-Follow service logs:
+## Installation and Updates
 
-```bash
-sudo journalctl -u volume -f
-```
+Fresh device setup installs and enables this stack but does not start it before
+the required reboot. Existing `/var/opt/volume_service` installations are not
+automatically replaced by application updates. Hardware-aware audio updates
+require a separate compatibility design.
 
-## Legacy Service
-
-The old rotary encoder service is preserved in `volume_service_legacy/`. It is not packaged as the active service for new AeroJudge Device App releases.
+The old rotary encoder implementation remains in `volume_service_legacy/` for
+reference only.
