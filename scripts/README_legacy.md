@@ -4,7 +4,7 @@
 	- username : judge
 	- password : <*password*>
    <br>
-2. Once complete insert the SD in to the rPI and boot. The initial boot will take some time as the system will expand the SD card's file system and configure the user and wifi details. 
+2. Once complete insert the SD in to the rPI and boot. The initial boot will take some time as the system will expand the SD card's file system and configure the user and wifi details.
    <br>
 3. Some screens require drivers to work, if your sreen needs this then install it now. Installing at the end will overwrite the gpio key bindings needed for the buttons to work, if you dont't require screen drivers skip to #5
 <br>
@@ -48,7 +48,7 @@ chmod +x judge_setup.sh
    <br>
 5. Once complete insert the SD in to the rPI and boot.
    <br>
-6. At this point we might need to install drivers for the screen for WaveShare 3.5" Screens follow the commands below, please ensure at the LCD35B-show-V2 lines replace this with the relevant command based on your screen of choice. If your screen is already working correctly please skip this step 
+6. At this point we might need to install drivers for the screen for WaveShare 3.5" Screens follow the commands below, please ensure at the LCD35B-show-V2 lines replace this with the relevant command based on your screen of choice. If your screen is already working correctly please skip this step
 ***Reference here :*** https://www.waveshare.com/wiki/Main_Page#Display-LCD-OLEDs
     ```
 	git clone https://github.com/waveshare/LCD-show.git
@@ -57,7 +57,7 @@ chmod +x judge_setup.sh
 	./LCD35B-show-V2
 	./LCD35B-show-V2 180
 	```
-	<br>	
+	<br>
 
 
 # AeroJudge Device App Setup From Scratch
@@ -70,7 +70,7 @@ The purpose of this document is to set out the process to the build a Raspberry 
    <br>
 2. Once the image has complete, remove and re-insert the SD into your PC, this should remount the SD card with an additional drive attached to your PC labled bootfs
    <br>
-3. If you did not configure the WiFi in the previous step on the bootfs volume create a file called **wpa_supplicant.conf** with the following information replace **\<Country Code>**, **\<SSID>**, and **\<PASSWORD>** with your own country code **US**, WiFi SSID **ScoreBox**, and password. 
+3. If you did not configure the WiFi in the previous step on the bootfs volume create a file called **wpa_supplicant.conf** with the following information replace **\<Country Code>**, **\<SSID>**, and **\<PASSWORD>** with your own country code **US**, WiFi SSID **ScoreBox**, and password.
 _Note: The < > brackets are not part of the file - they only indicate these are placeholders._
 	```
 	ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
@@ -88,7 +88,7 @@ _Note: The < > brackets are not part of the file - they only indicate these are 
 	```
 	{
 		"judge_id":1,
-		"line_number":1,	
+		"line_number":1,
 		"score_host":"192.168.1.4",
 		"score_http_port":8181,
 		"language":"en"
@@ -101,7 +101,7 @@ _Note: The < > brackets are not part of the file - they only indicate these are 
 	- line_number = This is the flight line if you are running multiple flight lines (Leave it as 1 for now)
 	- language = This will be used to determine which audio files to use. currently we are only supporting English so leave this unchanged
 	<br>
-5. Once complete insert the SD in to the rPI and boot. The inital boot will take some time as the system will expand the SD card's file system and configure the user and wifi details. 
+5. Once complete insert the SD in to the rPI and boot. The inital boot will take some time as the system will expand the SD card's file system and configure the user and wifi details.
    <br>
 6. Using a tool like Ping, or looking on your Router AP, determine the IP address of the PI and SSH into the rPI to configure the system swapfile for improved performance (if using an older Pi), We are going to update the swap to 512MB
     ```
@@ -113,7 +113,7 @@ _Note: The < > brackets are not part of the file - they only indicate these are 
 	```
 	<br>
 7. While still SSH'd to the rPI, run the the following to update the OS
-	```    
+	```
 	echo "deb http://mirror.ox.ac.uk/sites/archive.raspbian.org/archive/raspbian bullseye main contrib non-free rpi" | sudo tee -a /etc/apt/sources.list
 	sudo apt update
 	sudo apt upgrade -y
@@ -149,7 +149,7 @@ _Note: The < > brackets are not part of the file - they only indicate these are 
 	sudo vi /boot/cmdline.txt
 	```
 	<br>
-12. At this point we might need to install drivers for the screen for WaveShare 3.5" Screens follow the commands below, please ensure at the LCD35B-show-V2 lines replace this with the relevant command based on your screen of choice. If your screen is already working correctly please skip this step 
+12. At this point we might need to install drivers for the screen for WaveShare 3.5" Screens follow the commands below, please ensure at the LCD35B-show-V2 lines replace this with the relevant command based on your screen of choice. If your screen is already working correctly please skip this step
 ***Reference here :*** https://www.waveshare.com/wiki/Main_Page#Display-LCD-OLEDs
     ```
 	git clone https://github.com/waveshare/LCD-show.git
@@ -158,7 +158,7 @@ _Note: The < > brackets are not part of the file - they only indicate these are 
 	./LCD35B-show-V2
 	./LCD35B-show-V2 180
 	```
-	<br>	
+	<br>
 13. Configure and touch calibrations
     ```
 	sudo apt install xinput-calibrator
@@ -213,28 +213,28 @@ _Note: The < > brackets are not part of the file - they only indicate these are 
 	<br>
 17. Install the Judging software. The prerequisite to this, you would have needed to download and copied all the files from the scripts folder in the repo to /home/judge on the pi
     ```
-	
+
 	sudo mkdir /var/opt/judge
 	sudo chown judge:judge /var/opt/judge
 	mkdir /var/opt/judge/bin
-	
+
 	mv judge.sh /var/opt/judge/bin
 	chmod +x /var/opt/judge/bin/judge.sh
-	
+
 	sudo mv judge.service /lib/systemd/system/
 	sudo systemctl enable judge.service
 
 	mv kiosk.sh /var/opt/judge/bin
 	chmod +x /var/opt/judge/bin/kiosk.sh
-	
+
 	sudo mv kiosk.service /lib/systemd/system/
 	sudo systemctl enable kiosk.service
 
 	sudo ln -s /boot/settings.json /var/opt/judge/settings.json
 
-   	chmod +x judge_update.sh
-   	./judge_update.sh
-        
+	chmod +x judge_update.sh
+	./judge_update.sh
+
 	```
 
 18. Reboot : On the first boot the Judge-App will attempt to connect to Score and retrieve the current Pilots and Sequences, you will need to run Score create a comp and enable the service in the services tab with the correct port. You can also from you PC once the PI has rebooted browse to http://PI-IP:8080/newcomp

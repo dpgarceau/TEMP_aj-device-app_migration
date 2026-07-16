@@ -69,7 +69,7 @@ sudo sed -i 's/#arm_freq=800/arm_freq=800/g' /boot/config.txt 		> /dev/null 2>&1
 #Setting Screen refresh Rate
 echo -e "${Yellow}Setting Screen refresh Rate..."
 echo "" 									| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-echo "#Setting Screen refresh Rate"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1	
+echo "#Setting Screen refresh Rate"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 echo "dtparam=speed=41000000" 				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 echo "dtparam=fps=30" 						| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 
@@ -119,39 +119,39 @@ case $response in
 		echo "Setting up AeroJudge red board (No v#) gpio to key mappings"
 		echo ""																					| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 		echo "#gpio key mappings" 																| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "dtoverlay=gpio-key,gpio=22,active_low=1,gpio_pull=up,keycode=2  # Not Observed"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=3  # -0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=4   # -1"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=26,active_low=1,gpio_pull=up,keycode=5  # encoder up/previous"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=5,active_low=1,gpio_pull=up,keycode=6   # zero"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=19,active_low=1,gpio_pull=up,keycode=7  # encoder down/next"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=8  # break"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=2,active_low=1,gpio_pull=up,keycode=9   # +0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=3,active_low=1,gpio_pull=up,keycode=10  # +1"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=11  #speak"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
+		echo "dtoverlay=gpio-key,gpio=22,active_low=1,gpio_pull=up,keycode=2  # Not Observed"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=3  # -0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=4   # -1"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=26,active_low=1,gpio_pull=up,keycode=5  # encoder up/previous"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=5,active_low=1,gpio_pull=up,keycode=6   # zero"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=19,active_low=1,gpio_pull=up,keycode=7  # encoder down/next"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=8  # break"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=2,active_low=1,gpio_pull=up,keycode=9   # +0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=3,active_low=1,gpio_pull=up,keycode=10  # +1"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=11  #speak"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 		;;
 	3)
 		echo "Setting up AeroJudge Rev 2.5 (Blue board) gpio to key mappings"
 		echo ""																					| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 		echo "#gpio key mappings" 																| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "dtoverlay=gpio-key,gpio=15,active_low=1,gpio_pull=up,keycode=5  # encoder up/previous"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=14,active_low=1,gpio_pull=up,keycode=10  # +1"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=22,active_low=1,gpio_pull=up,keycode=9   # +0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=11  # caller"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=2  # Not Observed"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=20,active_low=1,gpio_pull=up,keycode=7  # encoder down/next"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=21,active_low=1,gpio_pull=up,keycode=4   # -1"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=5,active_low=1,gpio_pull=up,keycode=3   # -0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=6  # 0"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=8  # break"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
+		echo "dtoverlay=gpio-key,gpio=15,active_low=1,gpio_pull=up,keycode=5  # encoder up/previous"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=14,active_low=1,gpio_pull=up,keycode=10  # +1"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=22,active_low=1,gpio_pull=up,keycode=9   # +0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=11  # caller"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=2  # Not Observed"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=20,active_low=1,gpio_pull=up,keycode=7  # encoder down/next"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=21,active_low=1,gpio_pull=up,keycode=4   # -1"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=5,active_low=1,gpio_pull=up,keycode=3   # -0.5"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=6  # 0"				| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=8  # break"			| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 		echo ""																					| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 		echo "#Shutdown and Power Off button commands (SN DPG-061 and above)" 					| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
-		echo "dtoverlay=gpio-shutdown,gpio_pin=25,active_low=1,gpio_pull=up,debounce=3000"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
-		echo "dtoverlay=gpio-poweroff,gpiopin=24,active_delay_ms=5000,inactive_delay_ms=4000"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1 
+		echo "dtoverlay=gpio-shutdown,gpio_pin=25,active_low=1,gpio_pull=up,debounce=3000"		| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
+		echo "dtoverlay=gpio-poweroff,gpiopin=24,active_delay_ms=5000,inactive_delay_ms=4000"	| sudo tee -a /boot/config.txt 		> /dev/null 2>&1
 		;;
-	c|C) 
+	c|C)
 		echo "Enter the prefered gpio mappings"
-		echo -e "${Blue}Previous :${NC}" 
+		echo -e "${Blue}Previous :${NC}"
 		read previous
 		echo -e "${Blue}+0.5 :${NC}"
 		read plus5
@@ -243,14 +243,14 @@ mkdir /var/opt/judge/bin 																													> /dev/null 2>&1
 sudo wget -O /lib/systemd/system/judge.service https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge.service 		> /dev/null 2>&1
 wget -O /var/opt/judge/bin/judge.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/judge.sh							> /dev/null 2>&1
 wget -O /home/judge/fetch_update.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/fetch_update.sh				> /dev/null 2>&1
-chmod +x /home/judge/fetch_update.sh																									> /dev/null 2>&1	
+chmod +x /home/judge/fetch_update.sh																									> /dev/null 2>&1
 sudo wget -O /lib/systemd/system/kiosk.service https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/kiosk.service			> /dev/null 2>&1
 wget -O /var/opt/judge/bin/kiosk.sh https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/kiosk.sh							> /dev/null 2>&1
 
 wget -O /home/judge/ajdesktop.png https://raw.githubusercontent.com/AeroJudge/aerojudge-device-app/main/scripts/ajdesktop.png						> /dev/null 2>&1
 pcmanfm --set-wallpaper /home/judge/ajdesktop.png --wallpaper-mode=stretch																	> /dev/null 2>&1
 
-chmod +x /var/opt/judge/bin/judge.sh					> /dev/null 2>&1	
+chmod +x /var/opt/judge/bin/judge.sh					> /dev/null 2>&1
 sudo systemctl enable judge.service				    		> /dev/null 2>&1
 sudo chmod +x /var/opt/judge/bin/kiosk.sh					> /dev/null 2>&1
 sudo systemctl enable kiosk.service				    		> /dev/null 2>&1

@@ -6,7 +6,7 @@ These instructions are for current AeroJudge Device hardware:
 - PCB revision `3.61`
 - Raspberry Pi 4B
 
-The supported installation path uses the prepared AeroJudge base image. 
+The supported installation path uses the prepared AeroJudge base image.
 
 ## Install a Device
 

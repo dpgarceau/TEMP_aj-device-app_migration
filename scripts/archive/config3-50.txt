@@ -2,7 +2,7 @@
 #
 # Used only in official AeroJudge devices with:
 # -- (1) Device Serial numbers DPG-100, and,
-# -- (2) PCB Revision 3.5x 
+# -- (2) PCB Revision 3.5x
 #
 # NOT TO BE USED ON OLDER LEGACY IMAC-ORG DERIVED SYSTEMS
 # Save as /boot/config.txt
@@ -90,7 +90,7 @@ dtoverlay=disable-bt
 # ==================================================== #
 # GPIO KEY MAPS
 
-# Device GPIO Button Mapping 
+# Device GPIO Button Mapping
 dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=77   # J3 NEXT (KP6)
 dtoverlay=gpio-key,gpio=16,active_low=1,gpio_pull=up,keycode=81  # J4 -1.0 (KP3)
 dtoverlay=gpio-key,gpio=19,active_low=1,gpio_pull=up,keycode=80  # J5 -0.5 (KP2)
