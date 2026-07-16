@@ -1,15 +1,15 @@
-# AeroJudge config version, updated on 16-July-2026
+# AeroJudge config version, updated on 30-June-2026
 #
 # Used only in official AeroJudge devices with:
-# -- (1) Device Serial numbers DPG-110, and,
-# -- (2) PCB Revision 3.61 and above 
+# -- (1) Device Serial numbers DPG-105, and,
+# -- (2) PCB Revision 3.6x 
 #
 # NOT TO BE USED ON OLDER LEGACY IMAC-ORG DERIVED SYSTEMS
 # Save as /boot/config.txt
 
 
 # ==================================================== #
-# GENERAL PI CONFIG SETTINGS
+# General Pi Config Settings
 
 
 # For more options and information see
@@ -84,7 +84,7 @@ max_framebuffers=2
 disable_overscan=1
 
 # ==================================================== #
-# MODEL SPECIFIC PI CONFIG SETTINGS
+# Model-Specific Settings
 
 [pi4]
 # Run as fast as firmware / board allows
@@ -100,12 +100,16 @@ dtoverlay=disable-bt
 # GPIO KEY MAPS
 
 # Device GPIO Button Mapping 
-dtoverlay=gpio-key,gpio=5,active_low=1,gpio_pull=up,keycode=77   # J3 NEXT (KP6)
-dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=81  # J4 -1.0 (KP3)
-dtoverlay=gpio-key,gpio=12,active_low=1,gpio_pull=up,keycode=80  # J5 -0.5 (KP2)
-dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=76  # J6 ZERO (KP5)
-dtoverlay=gpio-key,gpio=16,active_low=1,gpio_pull=up,keycode=71  # J7 BREAK (KP7)
-dtoverlay=gpio-key,gpio=26,active_low=1,gpio_pull=up,keycode=83  # J8 DEADLINE (KPDOT)
+dtoverlay=gpio-key,gpio=6,active_low=1,gpio_pull=up,keycode=77   # J3 NEXT (KP6)
+dtoverlay=gpio-key,gpio=12,active_low=1,gpio_pull=up,keycode=81  # J4 -1.0 (KP3)
+dtoverlay=gpio-key,gpio=13,active_low=1,gpio_pull=up,keycode=80  # J5 -0.5 (KP2)
+dtoverlay=gpio-key,gpio=16,active_low=1,gpio_pull=up,keycode=76  # J6 ZERO (KP5)
+dtoverlay=gpio-key,gpio=26,active_low=1,gpio_pull=up,keycode=71  # J7 BREAK (KP7)
+
+# PCB 3.6 hardware conflict: GPIO20 is claimed by the kernel I2S pin group.
+#dtoverlay=gpio-key,gpio=20,active_low=1,gpio_pull=up,keycode=83  # J8 DEADLINE (KPDOT)
+# TEMPORARY Deadline will use the J9 SPARE - MUST FIX IN PCB3.61
+dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=83  # J9 SPARE (KPDOT)
 
 #dtoverlay=gpio-key,gpio=4,active_low=1,gpio_pull=up,keycode=31  # J9 SPARE (KP S- unused)
 dtoverlay=gpio-key,gpio=14,active_low=1,gpio_pull=up,keycode=79  # J10 NOT OBSERVED (KP1)

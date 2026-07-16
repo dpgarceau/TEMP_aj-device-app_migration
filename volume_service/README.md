@@ -1,7 +1,7 @@
-# AeroJudge PCB 3.6 Audio and Volume Services
+# AeroJudge PCB 3.61+ Audio and Volume Services
 
 This directory contains the hardware-specific audio stack for AeroJudge PCB
-3.6:
+3.61+:
 
 - PCM5122 DAC through the `hifiberry-dacplus` driver;
 - TPA6132A2 amplifier enable on active-high GPIO8;
@@ -47,7 +47,7 @@ The volume daemon runs as `judge`, which already belongs to the `input` and
 | 114 | Volume down |
 | 115 | Volume up |
 
-The configured PCB 3.6 behavior is:
+The configured PCB 3.61+ behavior is:
 
 - startup: 80%;
 - production minimum: 65%;

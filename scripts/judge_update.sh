@@ -78,7 +78,7 @@ check_volume_service() {
             VZIP="${STAGING_DIR}/volume_service.zip"
             [ ! -f "$VZIP" ] && VZIP="volume_service.zip"
 
-            echo "Installing PCB 3.6 audio and volume services..."
+            echo "Installing PCB 3.61+ audio and volume services..."
             sudo mkdir -p /var/opt/volume_service
             sudo chown judge:judge /var/opt/volume_service
             unzip -quoj "$VZIP" -d /var/opt/volume_service/
@@ -116,7 +116,7 @@ check_volume_service() {
             sudo systemctl enable audio-hardware.service volume.service
             echo "Audio services enabled; they will start after the required reboot."
         else
-            echo "Latest release does not include the PCB 3.6 audio stack"
+            echo "Latest release does not include the PCB 3.61+ audio stack"
         fi
     fi
 }

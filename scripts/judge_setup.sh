@@ -54,8 +54,8 @@ confirm_target() {
     echo -e "${GREEN}AeroJudge Device Fresh Install${NC}"
     echo
     echo "Target hardware:"
-    echo "  - AeroJudge Device serial DPG-100 and above"
-    echo "  - AeroJudge PCB revision 3.6"
+    echo "  - AeroJudge Device serial DPG-110 and above"
+    echo "  - AeroJudge PCB revision 3.61+"
     echo "  - Raspberry Pi 4B"
     echo "  - Raspberry Pi OS Bullseye 32-bit Desktop"
     echo

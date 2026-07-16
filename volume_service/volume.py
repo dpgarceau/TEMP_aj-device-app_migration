@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-AeroJudge PCB 3.6 TS43 thumbwheel volume service.
+AeroJudge PCB 3.61+ TS43 thumbwheel volume service.
 
 Installed path: /var/opt/volume_service/volume.py
 
-The AeroJudge PCB 3.6 routes the Same Sky TS43 thumbwheel contacts through
+The AeroJudge PCB 3.61+ routes the Same Sky TS43 thumbwheel contacts through
 Linux gpio-key overlays. This daemon listens for the resulting evdev key
 events and controls the PCM5122 hardware mixer with amixer.
 

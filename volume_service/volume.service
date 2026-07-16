@@ -1,5 +1,5 @@
 [Unit]
-Description=AeroJudge PCB 3.6 TS43 thumbwheel volume service
+Description=AeroJudge PCB 3.61+ TS43 thumbwheel volume service
 Wants=audio-hardware.service
 PartOf=audio-hardware.service
 After=audio-hardware.service

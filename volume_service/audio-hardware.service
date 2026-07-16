@@ -1,5 +1,5 @@
 [Unit]
-Description=AeroJudge PCB 3.6 DAC and amplifier lifecycle
+Description=AeroJudge PCB 3.61+ DAC and amplifier lifecycle
 Wants=sound.target
 After=sound.target
 Before=volume.service

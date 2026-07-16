@@ -1,6 +1,6 @@
 # AeroJudge Device Settings
 
-Fresh production setup for AeroJudge Device serial DPG-100 and above stores
+Fresh production setup for AeroJudge Device serial DPG-110 and above stores
 device settings at:
 
 ```text

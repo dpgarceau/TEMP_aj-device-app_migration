@@ -2,8 +2,8 @@
 
 These instructions are for current AeroJudge Device hardware:
 
-- serial numbers above `DPG-100`
-- PCB revision `3.6`
+- serial numbers above `DPG-110`
+- PCB revision `3.61`
 - Raspberry Pi 4B
 
 The supported installation path uses the prepared AeroJudge base image. 
@@ -53,7 +53,7 @@ export AEROJUDGE_RELEASE_API_URL="https://api.github.com/repos/dpgarceau/TEMP_aj
 The launcher exports those values before running `judge_setup.sh`, so the setup
 script, update fetcher, and release installer use the same test endpoints.
 The release endpoint must contain a `volume_service.zip` built from the same
-PCB 3.6 implementation; changing only the raw branch URL does not change
+PCB 3.61 implementation; changing only the raw branch URL does not change
 release assets.
 
 ## What Setup Installs
@@ -74,7 +74,7 @@ The setup script:
 - disables PackageKit desktop update prompts
 - fetches and installs release assets
 - validates services, release assets, audio assets, runtime directories, and
-  the PCB 3.6 boot configuration
+  the PCB 3.61+ boot configuration
 - asks whether to reboot
 
 ## Settings
@@ -124,7 +124,6 @@ Then validate on assembled hardware:
 - another machine can load `http://<pi-ip>:8080`
 - Score connectivity and test sync work
 - GPIO scoring buttons perform the expected actions
-- PCB 3.6 DEADLINE is unavailable because its GPIO20 route conflicts with I2S
 - volume thumbwheel changes volume
 - audio is audible through the device amplifier
 - shutdown/poweroff behavior works
