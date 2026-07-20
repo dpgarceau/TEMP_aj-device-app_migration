@@ -1,13 +1,11 @@
 # AeroJudge PCB 3.61+ Audio and Volume Services
 
 This directory contains the hardware-specific audio stack for AeroJudge PCB
-3.61+:
+3.61+ with device serial numbers DPG-110 and above.
 
 - PCM5122 DAC through the `hifiberry-dacplus` driver;
 - TPA6132A2 amplifier enable on active-high GPIO8;
 - Same Sky TS43 volume-down and volume-up contacts.
-
-PCB 3.5 is not supported by this stack.
 
 ## Runtime Files
 

@@ -62,7 +62,7 @@ mvn spring-boot:run
 5. Connecting to the dev container can be done in your local browser http://locahost:8080
 
 ## Build AeroJudge Device App
-1. To build the jar file to be deployed to the PI-SCORE unit.
+1. To build the jar file to be deployed to the device.
 ```
 cd judge/
 ./mvnw clean package
