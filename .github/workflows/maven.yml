@@ -1,20 +1,15 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: Create Tag
 
+# Creates the next stable AeroJudge release tag from approved main changes.
+# Root pom.xml selects the active YY.MAJOR.0 release line; this workflow owns
+# only the generated MINOR segment.
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  build:
+  create-tag:
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -22,9 +17,10 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
+        ref: main
 
-    - name: Detect releasable changes
-      id: detect-changes
+    - name: Calculate next release tag
+      id: release-tag
       shell: bash
       run: |
         set -euo pipefail
@@ -36,55 +32,69 @@ jobs:
           changed_files="$(git diff --name-only "${{ github.event.before }}..${{ github.sha }}")"
           echo "Comparing push range: ${{ github.event.before }}..${{ github.sha }}"
         else
-          latest_stable_tag="$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | head -n 1 || true)"
-          if [ -n "$latest_stable_tag" ]; then
-            changed_files="$(git diff --name-only "$latest_stable_tag..HEAD")"
-            echo "Comparing manual range: $latest_stable_tag..HEAD"
+          latest_any_tag="$(git tag --list 'v[0-9][0-9].*.*' --sort=-v:refname | grep -E '^v[0-9]{2}\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
+          if [ -n "$latest_any_tag" ]; then
+            changed_files="$(git diff --name-only "$latest_any_tag..HEAD")"
+            echo "Comparing manual main range: $latest_any_tag..HEAD"
           else
             changed_files="$(git ls-tree -r --name-only HEAD)"
             echo "No stable tags found; checking repository contents at HEAD"
           fi
         fi
 
-        if echo "$changed_files" | grep -E '^(judge/|figures/|volume_service/)' >/dev/null; then
-          echo "should_tag=true" >> "$GITHUB_OUTPUT"
-          echo "Releasable changes detected"
-        else
+        # Only product/device-relevant paths create field release tags.
+        # Markdown and text-only changes are intentionally excluded by extension.
+        releasable_files="$(printf '%s\n' "$changed_files" \
+          | grep -E '^(pom\.xml|judge/|figures/|volume_service/|scripts/|assembly/)' \
+          | grep -Eiv '\.(md|txt)$' || true)"
+
+        if [ -z "$releasable_files" ]; then
           echo "should_tag=false" >> "$GITHUB_OUTPUT"
-          echo "No releasable changes detected; skipping tag creation"
+          echo "No release-relevant changes detected after excluding .md and .txt files."
+          exit 0
         fi
+
+        # The checked-in root version must be a release-line base, not a full
+        # generated release. Example: 26.1.0 is valid; 26.1.4 is not.
+        root_version="$(sed -n '0,/<version>/{s/.*<version>\([^<]*\)<\/version>.*/\1/p}' pom.xml | head -n 1)"
+        if [[ ! "$root_version" =~ ^[0-9]{2}\.[0-9]+\.0$ ]]; then
+          echo "Release line validation failed." >&2
+          echo "Root pom.xml version: ${root_version:-<missing>}" >&2
+          echo "Expected root pom.xml release line format: YY.MAJOR.0, for example 26.1.0" >&2
+          exit 1
+        fi
+
+        line_base="${root_version%.*}"
+        tag_prefix="v$line_base"
+        # Ignore tags outside the active YY.MAJOR line so temp/migration tags
+        # cannot affect the next field release number.
+        latest_line_tag="$(git tag --list "$tag_prefix.*" --sort=-v:refname | grep -E "^${tag_prefix//./\\.}\.[0-9]+$" | head -n 1 || true)"
+
+        if [ -z "$latest_line_tag" ]; then
+          new_tag="$tag_prefix.0"
+        else
+          last_number="${latest_line_tag##*.}"
+          new_number=$((last_number + 1))
+          new_tag="$tag_prefix.$new_number"
+        fi
+
+        echo "Release-relevant files:"
+        printf '%s\n' "$releasable_files"
+        echo "Active release line: $root_version"
+        echo "Latest tag in active line: ${latest_line_tag:-<none>}"
+        echo "Next release tag: $new_tag"
+
+        echo "should_tag=true" >> "$GITHUB_OUTPUT"
+        echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
 
     - name: Skip summary
-      if: steps.detect-changes.outputs.should_tag != 'true'
-      run: echo "Skipping tag creation because no changes were found in judge/, figures/, or volume_service/"
-
-    - name: Get Latest Tag
-      id: latest-tag
-      if: steps.detect-changes.outputs.should_tag == 'true'
-      run: |
-        git fetch --tags
-        latest_tag=$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | head -n 1)
-        if [ -z "$latest_tag" ]; then
-          latest_tag="v1.0.0"
-        fi
-        echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
-
-    - name: Increment Tag
-      id: increment-tag
-      if: steps.detect-changes.outputs.should_tag == 'true'
-      run: |
-        latest_tag="${{ steps.latest-tag.outputs.latest_tag }}"
-        prefix=${latest_tag%.*}
-        last_number=${latest_tag##*.}
-        new_number=$((last_number + 1))
-        new_tag="$prefix.$new_number"
-        echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
-        echo "Incremented tag: $new_tag"
+      if: steps.release-tag.outputs.should_tag != 'true'
+      run: echo "Skipping tag creation because no release-relevant non-documentation changes were found."
 
     - name: Create Tag
-      if: steps.detect-changes.outputs.should_tag == 'true'
+      if: steps.release-tag.outputs.should_tag == 'true'
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git tag -a ${{ steps.increment-tag.outputs.new_tag }} -m "Latest released version"
-        git push origin ${{ steps.increment-tag.outputs.new_tag }}
+        git tag -a "${{ steps.release-tag.outputs.new_tag }}" -m "Release ${{ steps.release-tag.outputs.new_tag }}"
+        git push origin "${{ steps.release-tag.outputs.new_tag }}"

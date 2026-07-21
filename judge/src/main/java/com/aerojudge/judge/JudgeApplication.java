@@ -62,17 +62,8 @@ public class JudgeApplication implements WebMvcConfigurer {
 		String version = (pkg != null && pkg.getImplementationVersion() != null)
 			? pkg.getImplementationVersion()
 			: null;
-		if (version != null) {
+		if (version != null && !version.isBlank()) {
 			return version;
-		}
-		// Fallback: read from .judge_last_release
-		try {
-			java.nio.file.Path path = java.nio.file.Paths.get("/home/judge/.judge_last_release");
-			if (java.nio.file.Files.exists(path)) {
-				return java.nio.file.Files.readString(path).replace("v", "").trim();
-			}
-		} catch (Exception e) {
-			// Ignore, fallback below
 		}
 		return "unknown";
 	}

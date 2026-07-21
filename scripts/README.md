@@ -54,7 +54,8 @@ The launcher exports those values before running `judge_setup.sh`, so the setup
 script, update fetcher, and release installer use the same test endpoints.
 The release endpoint must contain a `volume_service.zip` built from the same
 PCB 3.61 implementation; changing only the raw branch URL does not change
-release assets.
+release assets. Test release tags must use the stable `vYY.MAJOR.MINOR`
+format, for example `v26.1.0`.
 
 ## What Setup Installs
 
@@ -88,9 +89,31 @@ Fresh setup writes settings directly to:
 The old flow used `/boot/settings.json`; do not use that location for current
 fresh-device setup.
 
-Setup currently prompts for `seasonYear` because existing release tags do not
-encode the season year. Future `vYY.MAJOR.MINOR` release tags should allow setup
-to derive it and validate it against figure-package metadata.
+Setup currently prompts for `seasonYear` even though release tags now encode the
+season year as `vYY.MAJOR.MINOR`. A future approved setup/asset change should
+decide how to derive it from the release tag and validate it against
+figure-package metadata.
+
+## Version Checks
+
+The running application version comes from the packaged `judge.jar` manifest:
+
+```sh
+curl -s http://localhost:8080/api/version
+```
+
+The installed-release marker remains separate update/install state:
+
+```sh
+cat /home/judge/.judge_last_release
+```
+
+Use the marker only to inspect what setup/update last installed successfully.
+If needed, verify the packaged artifact directly:
+
+```sh
+unzip -p /var/opt/judge/bin/judge.jar META-INF/MANIFEST.MF | grep Implementation-Version
+```
 
 Default setup values:
 
@@ -132,5 +155,5 @@ Then validate on assembled hardware:
 
 - `attempt_auto_sync_scores` is currently re-added to `settings.json` by the
   app after startup. That is an app storage bug, not a setup-script setting.
-- `seasonYear` should become release-derived once `vYY.MAJOR.MINOR` release
-  tags and figure-package metadata are in place.
+- `seasonYear` should become release-derived once figure-package metadata and a
+  separately approved setup/asset validation flow are in place.

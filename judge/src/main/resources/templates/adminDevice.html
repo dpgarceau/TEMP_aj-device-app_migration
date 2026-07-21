@@ -290,6 +290,13 @@
     let currentLineNumber = lineNumber;
     let currentJudgeId = judgeId;
 
+    function formatReleaseVersion(version) {
+      if (!version || version === 'unknown') {
+        return 'unknown';
+      }
+      return 'v' + version;
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       // Initialize floating action button
       var elems = document.querySelectorAll('.fixed-action-btn');
@@ -312,7 +319,7 @@
         url: "/api/version",
         dataType: "json",
         success: function(data) {
-          $('#currentVersion').text('v' + (data.appVersion || '?'));
+          $('#currentVersion').text(formatReleaseVersion(data.appVersion));
         },
         error: function() {
           $('#currentVersion').text('unknown');
@@ -543,17 +550,17 @@
               // Store version info and show confirmation modal
               pendingUpdateVersion = data.latestVersion;
               $('#updateVersionInfo').html(
-                '<strong>Current:</strong> v' + data.currentVersion +
+                '<strong>Current:</strong> ' + formatReleaseVersion(data.currentVersion) +
                 ' <i class="material-icons tiny" style="vertical-align: middle;">arrow_forward</i> ' +
-                '<strong>Available:</strong> v' + data.latestVersion
+                '<strong>Available:</strong> ' + formatReleaseVersion(data.latestVersion)
               );
-              $('#updateMessage').html('<span class="blue-text">Update available: v' + data.latestVersion + '</span>');
+              $('#updateMessage').html('<span class="blue-text">Update available: ' + formatReleaseVersion(data.latestVersion) + '</span>');
 
               var modal = M.Modal.getInstance(document.getElementById('confirmUpdateModal'));
               modal.open();
             } else {
               // Already up to date
-              $('#updateMessage').html('<span class="green-text">Already up to date (v' + data.currentVersion + ')</span>');
+              $('#updateMessage').html('<span class="green-text">Already up to date (' + formatReleaseVersion(data.currentVersion) + ')</span>');
               M.toast({ html: 'Already running latest version', classes: 'green', displayLength: 5000 });
             }
           } else {
@@ -610,11 +617,11 @@
                     $('#updateProgress').hide();
                     var newVersion = vData.appVersion || '';
                     if (pendingUpdateVersion && newVersion === pendingUpdateVersion) {
-                      $('#updateMessage').html('<span class="green-text">Update successful — now running v' + newVersion + '</span>');
-                      M.toast({ html: 'Update successful — v' + newVersion, classes: 'green', displayLength: 5000 });
+                      $('#updateMessage').html('<span class="green-text">Update successful — now running ' + formatReleaseVersion(newVersion) + '</span>');
+                      M.toast({ html: 'Update successful — ' + formatReleaseVersion(newVersion), classes: 'green', displayLength: 5000 });
                     } else {
-                      $('#updateMessage').html('<span class="red-text">Update failed — rolled back to v' + newVersion + '</span>');
-                      M.toast({ html: 'Update failed — rolled back to v' + newVersion, classes: 'red', displayLength: 5000 });
+                      $('#updateMessage').html('<span class="red-text">Update failed — rolled back to ' + formatReleaseVersion(newVersion) + '</span>');
+                      M.toast({ html: 'Update failed — rolled back to ' + formatReleaseVersion(newVersion), classes: 'red', displayLength: 5000 });
                     }
                     $('#runUpdate').removeClass('disabled');
                     setTimeout(function() { window.location.reload(); }, 5000);

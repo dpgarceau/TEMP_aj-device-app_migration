@@ -5,12 +5,14 @@
 	<parent>
 		<groupId>com.aerojudge</groupId>
 		<artifactId>aerojudge-device-app</artifactId>
-		<version>1.0.0</version>
+		<version>26.1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<groupId>com.aerojudge</groupId>
+	<!-- Product release version is inherited from the parent/root pom.xml.
+	     Do not add a module <version>; release automation derives the full
+	     tag version from the root release line. -->
 	<artifactId>judge</artifactId>
-	<version>2.1.2</version>
 	<name>judge</name>
 	<description>AeroJudge</description>
 	<packaging>jar</packaging>
