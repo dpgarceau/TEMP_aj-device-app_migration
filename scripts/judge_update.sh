@@ -26,10 +26,17 @@ HEALTH_INTERVAL=5
 VERSION_FILE="/home/judge/.judge_last_release"
 MODE="$1"
 RELEASE_API_URL="${AEROJUDGE_RELEASE_API_URL:-https://api.github.com/repos/AeroJudge/aerojudge-device-app/releases/latest}"
+STABLE_TAG_PATTERN='^v[0-9]{2}\.[0-9]+\.[0-9]+$'
 
 # ---- Shared functions -------------------------------------------------------
 
-# Function to compare semantic versions in format v#.# or v#.#.#
+# Release tags are update/install state and keep the leading v in
+# /home/judge/.judge_last_release.
+is_stable_release_tag() {
+    echo "$1" | grep -Eq "$STABLE_TAG_PATTERN"
+}
+
+# Function to compare stable release tags in format vYY.MAJOR.MINOR
 # Returns: 0 if version1 > version2, 1 otherwise
 compare_versions() {
     local version1=$1
@@ -151,8 +158,22 @@ do_download() {
     fi
 
     latest_tag=$(echo $latest_release | grep -oP '"tag_name": "(.*?)"' | cut -d' ' -f2 | tr -d [\"])
-    if [ $? -ne 0 ]; then
-        echo "Error parsing feed!" >&2
+    if [ $? -ne 0 ] || [ -z "$latest_tag" ]; then
+        echo "Error parsing latest release tag from release feed!" >&2
+        return 1
+    fi
+
+    # Refuse malformed latest tags before comparing or staging assets.
+    if ! is_stable_release_tag "$latest_tag"; then
+        echo "Invalid latest release tag: $latest_tag" >&2
+        echo "Expected stable release tag format: vYY.MAJOR.MINOR, for example v26.1.0" >&2
+        return 1
+    fi
+
+    # A malformed marker means the update state is not trustworthy.
+    if [ -n "$last_release" ] && ! is_stable_release_tag "$last_release"; then
+        echo "Invalid installed release marker in $VERSION_FILE: $last_release" >&2
+        echo "Expected stable release tag format: vYY.MAJOR.MINOR, for example v26.1.0" >&2
         return 1
     fi
 
@@ -218,6 +239,13 @@ do_install() {
         TARGET_VERSION=$(cat "$STAGING_DIR/.target_version")
     fi
     echo "Installing update: $TARGET_VERSION"
+
+    # Install only a staged stable release tag written during download.
+    if ! is_stable_release_tag "$TARGET_VERSION"; then
+        echo "Invalid staged target release tag: $TARGET_VERSION" >&2
+        echo "Expected stable release tag format: vYY.MAJOR.MINOR, for example v26.1.0" >&2
+        return 1
+    fi
 
     # Backup current JAR before touching anything
     BACKUP_CREATED=false

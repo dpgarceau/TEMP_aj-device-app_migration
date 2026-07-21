@@ -1,31 +1,21 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: Create Release
 
+# Builds and publishes assets for strict stable vYY.MAJOR.MINOR tags.
+# Create Tag owns release-relevant path detection; this workflow trusts an
+# existing stable tag and validates the packaged release contract.
 on:
   push:
-    tags: 
-      - 'v*.*'
+    tags:
       - 'v*.*.*'
-  workflow_run:
-    workflows: ["Create Tag"]
-    types:
-      - completed
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Tag to build/release (e.g., v2.1.2)"
+        description: "Existing stable tag to build/release (for example, v26.1.0)"
         required: true
         type: string
+
 jobs:
   build:
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -33,165 +23,222 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
-        ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref) }}
 
-    - name: Detect releasable changes
-      id: detect-changes
+    - name: Resolve release tag
+      id: release
       shell: bash
       run: |
         set -euo pipefail
 
-        tag=""
         if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
           tag="${{ inputs.release_tag }}"
-        elif [ "${{ github.event_name }}" = "workflow_run" ]; then
-          head_sha="${{ github.event.workflow_run.head_sha }}"
-          tag="$(git tag --points-at "$head_sha" | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | sort -V | tail -n 1 || true)"
-          if [ -z "$tag" ]; then
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-            echo "No stable version tag found on workflow_run commit $head_sha; skipping build/release"
-            exit 0
-          fi
         else
           tag="${{ github.ref_name }}"
         fi
 
+        # Manual rebuilds must name an existing stable tag. Invalid tags fail
+        # here with a direct message instead of producing partial release work.
+        if [[ ! "$tag" =~ ^v[0-9]{2}\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Release tag validation failed." >&2
+          echo "Tag: ${tag:-<missing>}" >&2
+          echo "Expected stable tag format: vYY.MAJOR.MINOR, for example v26.1.0" >&2
+          exit 1
+        fi
+
         git fetch --tags
-        if ! git rev-parse "$tag^{tag}" >/dev/null 2>&1; then
-          echo "should_release=false" >> "$GITHUB_OUTPUT"
-          echo "Tag $tag was not found"
-          exit 0
+        if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+          echo "Release tag validation failed." >&2
+          echo "Tag $tag does not exist." >&2
+          echo "Manual dispatch requires an explicit existing stable tag." >&2
+          exit 1
         fi
 
         git checkout -q "$tag"
 
-        previous_stable_tag="$(git tag --merged "$tag" --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | grep -v "^${tag}$" | head -n 1 || true)"
+        release_version="${tag#v}"
+        previous_stable_tag="$(git tag --merged "$tag" --sort=-v:refname | grep -E '^v[0-9]{2}\.[0-9]+\.[0-9]+$' | grep -v "^${tag}$" | head -n 1 || true)"
 
-        if [ -n "$previous_stable_tag" ]; then
-          changed_files="$(git diff --name-only "$previous_stable_tag..$tag")"
-          echo "Comparing changes from $previous_stable_tag to $tag"
-        else
-          changed_files="$(git diff-tree --no-commit-id --name-only -r "$tag" || true)"
-          echo "No previous stable tag found; checking files in tagged commit $tag"
-        fi
-
-        if echo "$changed_files" | grep -E '^(judge/|figures/|volume_service/)' >/dev/null; then
-          echo "should_release=true" >> "$GITHUB_OUTPUT"
-          echo "Releasable changes detected"
-        else
-          echo "should_release=false" >> "$GITHUB_OUTPUT"
-          echo "No releasable changes detected; skipping build/release"
-        fi
-
-          echo "previous_stable_tag=$previous_stable_tag" >> "$GITHUB_OUTPUT"
-          echo "release_tag=$tag" >> "$GITHUB_OUTPUT"
-
-    - name: Skip summary
-      if: steps.detect-changes.outputs.should_release != 'true'
-      run: echo "Skipping release because no changes were found in judge/, figures/, or volume_service/"
+        echo "release_tag=$tag" >> "$GITHUB_OUTPUT"
+        echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+        echo "previous_stable_tag=$previous_stable_tag" >> "$GITHUB_OUTPUT"
+        echo "Release tag: $tag"
+        echo "Release version: $release_version"
+        echo "Previous stable tag: ${previous_stable_tag:-<none>}"
 
     - uses: actions/setup-java@v5
-      if: steps.detect-changes.outputs.should_release == 'true'
       with:
         java-version: '17'
         distribution: 'temurin'
-    - if: steps.detect-changes.outputs.should_release == 'true'
+
+    - name: Align Maven version to release tag
+      # Temporary runner-only change. Do not commit or push this generated
+      # MINOR version back to main.
+      run: mvn -B versions:set -DnewVersion="${{ steps.release.outputs.release_version }}" -DgenerateBackupPoms=false
+
+    - name: Build package
       run: |
-          cd judge
-          mvn clean package
-    - if: steps.detect-changes.outputs.should_release == 'true'
-      run: ls judge/target/
-    - if: steps.detect-changes.outputs.should_release == 'true'
-      run: mkdir staging && cp judge/target/*.jar staging/judge.jar
-    - if: steps.detect-changes.outputs.should_release == 'true'
-      run: cp judge/target/*.zip staging/figures.zip
-    - if: steps.detect-changes.outputs.should_release == 'true'
-      run: zip -r volume_service.zip volume_service/* && cp volume_service.zip staging/
-    - if: steps.detect-changes.outputs.should_release == 'true'
-      run: ls staging/
+        cd judge
+        mvn -B clean package
+
+    - name: Stage release assets
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        rm -rf staging
+        mkdir staging
+
+        # Stage exact public asset names consumed by setup/update scripts.
+        mapfile -t jar_files < <(find judge/target -maxdepth 1 -type f -name '*.jar' ! -name '*.original' | sort)
+        if [ "${#jar_files[@]}" -ne 1 ]; then
+          echo "Release asset staging failed." >&2
+          echo "Expected exactly one packaged judge jar in judge/target." >&2
+          echo "Found jar count: ${#jar_files[@]}" >&2
+          printf 'Jars found:\n%s\n' "${jar_files[@]:-<none>}" >&2
+          exit 1
+        fi
+
+        mapfile -t figure_zips < <(find judge/target -maxdepth 1 -type f -name '*figures*.zip' | sort)
+        if [ "${#figure_zips[@]}" -ne 1 ]; then
+          echo "Release asset staging failed." >&2
+          echo "Expected exactly one figures zip in judge/target." >&2
+          echo "Found figures zip count: ${#figure_zips[@]}" >&2
+          printf 'Figures zips found:\n%s\n' "${figure_zips[@]:-<none>}" >&2
+          exit 1
+        fi
+
+        cp "${jar_files[0]}" staging/judge.jar
+        cp "${figure_zips[0]}" staging/figures.zip
+        zip -qr staging/volume_service.zip volume_service
+
+        for asset in staging/judge.jar staging/figures.zip staging/volume_service.zip; do
+          if [ ! -s "$asset" ]; then
+            echo "Release asset contract validation failed." >&2
+            echo "Required staged asset is missing or empty: $asset" >&2
+            exit 1
+          fi
+        done
+
+        echo "Staged release assets:"
+        ls -l staging
+
+    - name: Validate jar manifest version
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        jar_path="staging/judge.jar"
+        expected_version="${{ steps.release.outputs.release_version }}"
+        # The packaged app version must match the release tag exactly.
+        manifest_version="$(unzip -p "$jar_path" META-INF/MANIFEST.MF 2>/dev/null | tr -d '\r' | awk -F': ' '/^Implementation-Version:/ {print $2; exit}')"
+
+        if [ "$manifest_version" != "$expected_version" ]; then
+          echo "Release version validation failed." >&2
+          echo "Release tag: ${{ steps.release.outputs.release_tag }}" >&2
+          echo "Expected release version: $expected_version" >&2
+          echo "Manifest Implementation-Version found: ${manifest_version:-<missing>}" >&2
+          echo "judge.jar path inspected: $jar_path" >&2
+          echo "Release assets were not published because the packaged app version does not match the release tag." >&2
+          exit 1
+        fi
+
+        echo "Manifest Implementation-Version validated: $manifest_version"
+
     - uses: actions/upload-artifact@v7
-      if: steps.detect-changes.outputs.should_release == 'true'
       with:
         name: Package
         path: staging
+
     - name: Create or update release assets
-      if: steps.detect-changes.outputs.should_release == 'true'
+      shell: bash
       run: |
-        tag="${{ steps.detect-changes.outputs.release_tag }}"
-        previous_stable_tag="${{ steps.detect-changes.outputs.previous_stable_tag }}"
+        set -euo pipefail
+
+        tag="${{ steps.release.outputs.release_tag }}"
+        previous_stable_tag="${{ steps.release.outputs.previous_stable_tag }}"
         repo="${{ github.repository }}"
+        expected_assets=$'figures.zip\njudge.jar\nvolume_service.zip'
         assets=(
           staging/judge.jar
           staging/figures.zip
           staging/volume_service.zip
         )
-        notes_file="release-notes.md"
 
-        is_prerelease=false
-        if [[ "$tag" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?- ]]; then
-          is_prerelease=true
-        fi
-
-        # Keep a single RC release per base version by deleting older prerelease tags/releases.
-        if [ "$is_prerelease" = true ]; then
-          base_tag="${tag%%-*}"
-          while IFS=$'\t' read -r release_id existing_tag; do
-            [ -z "$release_id" ] && continue
-            if [[ "$existing_tag" == "$base_tag"-* ]] && [[ "$existing_tag" != "$tag" ]]; then
-              echo "Deleting older prerelease release $existing_tag"
-              gh api -X DELETE "repos/$repo/releases/$release_id"
-              echo "Deleting older prerelease tag $existing_tag"
-              git push origin ":refs/tags/$existing_tag" || true
-            fi
-          done < <(gh api "repos/$repo/releases?per_page=100" --jq '.[] | select(.prerelease == true) | "\(.id)\t\(.tag_name)"')
-        fi
-
-        compare_text=""
-        commit_list=""
-        if [ -n "$previous_stable_tag" ]; then
-          compare_url="https://github.com/$repo/compare/$previous_stable_tag...$tag"
-          compare_text="[Full Changelog]($compare_url)"
-          commit_list="$(git log --pretty=format:'- %s (%h)' "$previous_stable_tag..$tag" || true)"
-          heading="## Changes Since $previous_stable_tag"
-        else
-          commit_list="$(git log -1 --pretty=format:'- %s (%h)' "$tag" || true)"
-          heading="## Changes"
-        fi
-
-        if [ -z "$commit_list" ]; then
-          commit_list="- No commit messages found in the release range."
-        fi
-
-        {
-          echo "$heading"
-          echo
-          echo "$commit_list"
-          if [ -n "$compare_text" ]; then
-            echo
-            echo "$compare_text"
-          fi
-        } > "$notes_file"
-
+        # Existing releases are rebuilds: preserve notes, replace only approved
+        # assets, and fail before upload if unexpected assets are present.
+        release_exists=false
         if gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
-          echo "Release for $tag already exists; replacing assets only"
-          gh release upload "$tag" "${assets[@]}" --clobber --repo "$repo"
-          if [ "$is_prerelease" = true ]; then
-            gh release edit "$tag" --title "Release: $tag" --notes-file "$notes_file" --prerelease --repo "$repo"
+          release_exists=true
+          actual_assets="$(gh release view "$tag" --repo "$repo" --json assets --jq '.assets[].name' | sort || true)"
+          extra_assets="$(comm -13 <(printf '%s\n' "$expected_assets" | sort) <(printf '%s\n' "$actual_assets" | sort) || true)"
+          if [ -n "$extra_assets" ]; then
+            echo "Release asset contract validation failed." >&2
+            echo "Release tag: $tag" >&2
+            echo "Expected asset names:" >&2
+            printf '%s\n' "$expected_assets" >&2
+            echo "Actual asset names found on the GitHub Release:" >&2
+            printf '%s\n' "${actual_assets:-<none>}" >&2
+            echo "Extra assets:" >&2
+            printf '%s\n' "$extra_assets" >&2
+            echo "Release assets were not published because the Phase 1 asset contract must be fixed before the release can be used." >&2
+            exit 1
           fi
-        else
-          echo "Creating release for $tag"
-          release_cmd=(
-            gh release create "$tag" "${assets[@]}"
-            --title "Release: $tag"
-            --notes-file "$notes_file"
-            --repo "$repo"
-          )
-
-          if [ "$is_prerelease" = true ]; then
-            release_cmd+=(--prerelease)
-          fi
-
-          "${release_cmd[@]}"
         fi
+
+        if [ "$release_exists" = true ]; then
+          echo "Release for $tag already exists; replacing approved assets and preserving release notes."
+          gh release upload "$tag" "${assets[@]}" --clobber --repo "$repo"
+        else
+          notes_file="release-notes.md"
+          compare_text=""
+          commit_list=""
+          if [ -n "$previous_stable_tag" ]; then
+            compare_url="https://github.com/$repo/compare/$previous_stable_tag...$tag"
+            compare_text="[Full Changelog]($compare_url)"
+            commit_list="$(git log --pretty=format:'- %s (%h)' "$previous_stable_tag..$tag" || true)"
+            heading="## Changes Since $previous_stable_tag"
+          else
+            commit_list="$(git log -1 --pretty=format:'- %s (%h)' "$tag" || true)"
+            heading="## Changes"
+          fi
+
+          if [ -z "$commit_list" ]; then
+            commit_list="- No commit messages found in the release range."
+          fi
+
+          {
+            echo "$heading"
+            echo
+            echo "$commit_list"
+            if [ -n "$compare_text" ]; then
+              echo
+              echo "$compare_text"
+            fi
+          } > "$notes_file"
+
+          echo "Creating release for $tag"
+          gh release create "$tag" "${assets[@]}" --title "Release: $tag" --notes-file "$notes_file" --repo "$repo"
+        fi
+
+        actual_assets="$(gh release view "$tag" --repo "$repo" --json assets --jq '.assets[].name' | sort || true)"
+        missing_assets="$(comm -23 <(printf '%s\n' "$expected_assets" | sort) <(printf '%s\n' "$actual_assets" | sort) || true)"
+        extra_assets="$(comm -13 <(printf '%s\n' "$expected_assets" | sort) <(printf '%s\n' "$actual_assets" | sort) || true)"
+
+        if [ -n "$missing_assets" ] || [ -n "$extra_assets" ]; then
+          echo "Release asset contract validation failed." >&2
+          echo "Release tag: $tag" >&2
+          echo "Expected asset names:" >&2
+          printf '%s\n' "$expected_assets" >&2
+          echo "Actual asset names found on the GitHub Release:" >&2
+          printf '%s\n' "${actual_assets:-<none>}" >&2
+          echo "Missing assets:" >&2
+          printf '%s\n' "${missing_assets:-<none>}" >&2
+          echo "Extra assets:" >&2
+          printf '%s\n' "${extra_assets:-<none>}" >&2
+          echo "The release asset contract must be fixed before the release can be used." >&2
+          exit 1
+        fi
+
+        echo "Release asset contract validated for $tag."
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

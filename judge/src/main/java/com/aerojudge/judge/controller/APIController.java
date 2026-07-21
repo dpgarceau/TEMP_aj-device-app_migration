@@ -41,6 +41,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.xml.sax.SAXException;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -57,6 +58,8 @@ import com.aerojudge.judge.service.SettingService;
 @RestController
 public class APIController {
     private static final Logger logger = LoggerFactory.getLogger(RootController.class);
+    private static final String RELEASE_VERSION_PATTERN = "^[0-9]{2}\\.[0-9]+\\.[0-9]+$";
+    private static final String RELEASE_TAG_PATTERN = "^v[0-9]{2}\\.[0-9]+\\.[0-9]+$";
 
     @Autowired
     private CompService compService;
@@ -509,29 +512,21 @@ public class APIController {
         return new ResponseEntity<>(new Gson().toJson(result), HttpStatus.OK);
     }
 
-    /**
-     * Compare semantic versions in format #.# or #.#.#
-     * @param version1 First version to compare
-     * @param version2 Second version to compare
-     * @return true if version1 > version2, false otherwise
-     */
+    private boolean isComparableReleaseVersion(String version) {
+        return version != null && version.matches(RELEASE_VERSION_PATTERN);
+    }
+
     private boolean isVersionGreater(String version1, String version2) {
-        if (version1 == null || version2 == null) {
+        if (!isComparableReleaseVersion(version1) || !isComparableReleaseVersion(version2)) {
             return false;
         }
 
-        // Remove 'v' prefix if present
-        version1 = version1.replaceFirst("^v", "");
-        version2 = version2.replaceFirst("^v", "");
-
-        // Split versions into parts
         String[] v1Parts = version1.split("\\.");
         String[] v2Parts = version2.split("\\.");
 
-        // Compare each part numerically
-        for (int i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
-            int v1Num = i < v1Parts.length ? Integer.parseInt(v1Parts[i]) : 0;
-            int v2Num = i < v2Parts.length ? Integer.parseInt(v2Parts[i]) : 0;
+        for (int i = 0; i < v1Parts.length; i++) {
+            int v1Num = Integer.parseInt(v1Parts[i]);
+            int v2Num = Integer.parseInt(v2Parts[i]);
 
             if (v1Num > v2Num) {
                 return true;
@@ -540,7 +535,6 @@ public class APIController {
             }
         }
 
-        // Versions are equal
         return false;
     }
 
@@ -955,6 +949,16 @@ public class APIController {
         String currentVersion = com.aerojudge.judge.JudgeApplication.getAppVersion();
         result.put("currentVersion", currentVersion);
 
+        if (!isComparableReleaseVersion(currentVersion)) {
+            result.put("result", "fail");
+            result.put("updateAvailable", false);
+            result.put("latestVersion", null);
+            result.put("latestTag", null);
+            result.put("message", "Current app version is unavailable or invalid; update checks require a packaged release version in YY.MAJOR.MINOR format.");
+            logger.warn("Version check skipped: current app version is not comparable: {}", currentVersion);
+            return new ResponseEntity<>(new GsonBuilder().serializeNulls().create().toJson(result), HttpStatus.SERVICE_UNAVAILABLE);
+        }
+
         try {
             HttpClient client = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(10))
@@ -971,8 +975,19 @@ public class APIController {
 
             if (response.statusCode() == 200) {
                 JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
-                String latestTag = json.get("tag_name").getAsString();
-                // Remove 'v' prefix if present for comparison
+                String latestTag = json.has("tag_name") && !json.get("tag_name").isJsonNull()
+                        ? json.get("tag_name").getAsString()
+                        : null;
+                if (latestTag == null || !latestTag.matches(RELEASE_TAG_PATTERN)) {
+                    result.put("result", "fail");
+                    result.put("updateAvailable", false);
+                    result.put("latestVersion", null);
+                    result.put("latestTag", latestTag);
+                    result.put("message", "Latest release tag is unavailable or invalid; expected vYY.MAJOR.MINOR format.");
+                    logger.warn("Version check skipped: latest release tag is not comparable: {}", latestTag);
+                    return new ResponseEntity<>(new GsonBuilder().serializeNulls().create().toJson(result), HttpStatus.SERVICE_UNAVAILABLE);
+                }
+
                 String latestVersion = latestTag.replaceFirst("^v", "");
                 boolean updateAvailable = isVersionGreater(latestVersion, currentVersion);
 
