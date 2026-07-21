@@ -25,23 +25,32 @@ That archive is for preservation and reference. This repository's `main` branch 
 
 Legacy builders and older hardware should continue to use the legacy IMAC-ORG code path. Current AeroJudge Device App work should target current official AeroJudge Device hardware.
 
-# For AeroJudge setup instruction please take a look here
-## https://github.com/AeroJudge/aerojudge-device-app/tree/main/scripts
+## Device Setup
+
+Current AeroJudge Device setup instructions are maintained in
+[`scripts/README.md`](scripts/README.md). The current production setup path uses
+`scripts/judge_setup.sh` for AeroJudge Device serial `DPG-110` and above with
+PCB revision `3.61+`.
 
 
-# For developer environment please look below
+## Developer Environment
 
 ## Requirements
+
 1. VSCode
 2. Docker Desktop
-3. Score =>v4.71 with services enabled and started
+3. Score >= v4.71 with services enabled and started
 4. Java 17 or later (Java 21 works fine)
 
-## RUN AeroJudge Device App
+## Run AeroJudge Device App Locally
+
 1. Open in a dev container
 2. Open new terminal
-3. Edit the /var/opt/judge/settings.json file with correct host_ip and port that Score is running on. The file is mounted from the .devcontainer/judge folder and can be modified there instead.
-```
+3. Edit `/var/opt/judge/settings.json` with the correct Score host and port.
+   The file is mounted from `.devcontainer/judge` and can be modified there
+   instead.
+
+```sh
 sudo vi /var/opt/judge/settings.json
 
 eg.
@@ -54,24 +63,52 @@ eg.
   "seasonYear":"26"
 }
 ```
-4. Running the app in the dev container
+
+4. Run the app:
+
+```sh
+cd judge
+./mvnw spring-boot:run
 ```
-cd /workspace
-mvn spring-boot:run
-```
-5. Connecting to the dev container can be done in your local browser http://locahost:8080
+
+5. Open <http://localhost:8080> in a local browser.
 
 ## Build AeroJudge Device App
-1. To build the jar file to be deployed to the device.
-```
-cd judge/
+
+To build the application package:
+
+```sh
+cd judge
 ./mvnw clean package
 ```
-Binary {build}.jar located in judge/target folder needs to be copied to the device and extracted in /var/opt/judge/bin
-Also {build}-figures.zip file needs to be copied to the device and extracted in /var/opt/judge
 
-## RUN AeroJudge Device App as a docker container (very similar to running in device)
-1. Build AeroJudge Device App using above instructions
-2. Right-click Dockerfile in root folder and choose Build Image... and name tag aerojudge-device-app:latest
-3. In terminal run: docker run -p 8080:8080 aerojudge-device-app:latest
-4. Connecting to the image can be done in your local browser http://locahost:8080
+Local Maven builds create a versioned JAR in `judge/target/`. Device installs
+and release assets must use the runtime filename `judge.jar`.
+
+For a manual device copy, rename the built JAR on the device:
+
+```sh
+cp judge/target/judge-26.1.0.jar /var/opt/judge/bin/judge.jar
+```
+
+GitHub release automation publishes stable asset names: `judge.jar`,
+`figures.zip`, and `volume_service.zip`.
+
+## Run AeroJudge Device App In Docker
+
+1. Build the application package:
+
+   ```sh
+   cd judge
+   ./mvnw clean package
+   cd ..
+   ```
+
+2. Build and run the Docker image:
+
+   ```sh
+   docker build -t aerojudge-device-app:latest .
+   docker run -p 8080:8080 aerojudge-device-app:latest
+   ```
+
+3. Open <http://localhost:8080> in a local browser.

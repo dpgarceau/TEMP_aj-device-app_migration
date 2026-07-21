@@ -1,30 +1,30 @@
 # Figure Assets Folder Structure
 
-This folder contains the figure assets (SVG images and audio files) used by the Judge application.
+This folder contains the figure assets (SVG images and audio files) used by the AeroJudge Device.
 
 ## Folder Hierarchy
 
 ```
 figures/en/
-├── default/           # Software-managed default sequences
-│   ├── season.cfg     # Season year configuration
-│   ├── FAIL/          # Fallback folder for missing figures
-│   │   └── fig_missing.svg
-│   ├── FS/            # Freestyle figures
-│   │   └── 1B.svg, 1C.svg, etc.
-│   ├── SPK_26S/       # Sportsman Known 2026 Standard
-│   ├── SPK_26A/       # Sportsman Known 2026 Alternate
-│   ├── INK_26S/       # Intermediate Known 2026 Standard
-│   └── ...etc
-├── event/             # Event-specific sequences (user-managed)
-│   ├── CUSTOM_UNK1/   # Custom unknown sequences
-│   └── ...etc
-├── audio/             # Score and announcement audio
-│   ├── score/         # Score value audio (0.mp3, 0.5.mp3, etc.)
-│   ├── now_judging_*.mp3  # Now Judging announcements
-│   └── break.mp3, not_observed.mp3
-├── std/               # [DEPRECATED] Old standard sequence folders
-└── alt/               # [DEPRECATED] Old alternate sequence folders
+|-- default/           # Software-managed default sequences
+|   |-- season.cfg     # Season year configuration
+|   |-- FAIL/          # Fallback folder for missing figures
+|   |   `-- fig_missing.svg
+|   |-- FS/            # Freestyle figures
+|   |   `-- 1B.svg, 1C.svg, etc.
+|   |-- SPK_26S/       # Sportsman Known 2026 Standard
+|   |-- SPK_26A/       # Sportsman Known 2026 Alternate
+|   |-- INK_26S/       # Intermediate Known 2026 Standard
+|   `-- ...etc
+|-- event/             # Event-specific sequences (user-managed)
+|   |-- CUSTOM_UNK1/   # Custom unknown sequences
+|   `-- ...etc
+|-- audio/             # Score and announcement audio
+|   |-- score/         # Score value audio (0.mp3, 0.5.mp3, etc.)
+|   |-- now_judging_*.mp3  # Now Judging announcements
+|   `-- break.mp3, not_observed.mp3
+|-- std/               # [DEPRECATED] Old standard sequence folders
+`-- alt/               # [DEPRECATED] Old alternate sequence folders
 ```
 
 ## Folder Name Convention

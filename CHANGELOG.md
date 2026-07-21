@@ -1,15 +1,15 @@
 # Changelog
 
-All notable changes to AeroJudge Device App will be documented in this file.
+This changelog begins with the AeroJudge Device App at v26.1.0
 
-This changelog starts with the AeroJudge Device App product line with device serial number DPG-100 and above. 
-Legacy IMAC Judge App history is preserved in the legacy repository and referenced in
-`MIGRATION.md`.
+The previous changelog was not consistently maintained and has been preserved
+as `CHANGELOG_legacy.md`. Do not reconstruct old release history here from
+memory. Historical project context is documented in `MIGRATION.md` and the
+legacy repository.
 
 ## Unreleased
 
-- Migrated project identity from IMAC Judge App to AeroJudge Device App.
-- Migrated Java package namespace from `co.za.imac.judge` to
-  `com.aerojudge.judge`.
-- Migrated Maven coordinates to the AeroJudge namespace.
-- Updated repository references to `AeroJudge/aerojudge-device-app`.
+- Prepared AeroJudge Device App identity, package namespace, Maven coordinates,
+  setup documentation, and release automation for the new repository load.
+- Fixed the local Docker image build path so the container runs the packaged
+  app as `judge.jar`, matching device runtime behavior.
