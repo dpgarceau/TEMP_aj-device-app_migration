@@ -13,3 +13,5 @@ legacy repository.
   setup documentation, and release automation for the new repository load.
 - Fixed the local Docker image build path so the container runs the packaged
   app as `judge.jar`, matching device runtime behavior.
+- Fixed release workflow handoff so non-release pushes do not create failed
+  release runs.

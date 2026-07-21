@@ -6,6 +6,15 @@ name: Create Tag
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - "pom.xml"
+      - "judge/**"
+      - "figures/**"
+      - "volume_service/**"
+      - "scripts/**"
+      - "assembly/**"
+      - "!**/*.md"
+      - "!**/*.txt"
   workflow_dispatch:
 
 jobs:
