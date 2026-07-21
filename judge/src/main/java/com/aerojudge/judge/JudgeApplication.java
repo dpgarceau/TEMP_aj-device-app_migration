@@ -58,6 +58,7 @@ public class JudgeApplication implements WebMvcConfigurer {
     }
 
 	public static String getAppVersion() {
+		// App identity comes from the packaged artifact, not the install marker.
 		Package pkg = JudgeApplication.class.getPackage();
 		String version = (pkg != null && pkg.getImplementationVersion() != null)
 			? pkg.getImplementationVersion()
