@@ -2,11 +2,11 @@
 
 ## Project Direction
 
-This repository is being prepared to become the AeroJudge Device App: the judging application for current official AeroJudge Device hardware.
+This repository was prepared to become the new home of AeroJudge Device Software: as part of the official AeroJudge Scoring System. 
 
 The forward path has two main goals:
 
-1. Rename and re-version the application as AeroJudge Device App / AeroJudge Device so it is clearly distinct from other AeroJudge projects.
+1. Rename and re-version the application as AeroJudge Device App / AeroJudge Device so it is clearly distinct from previous AeroJudge developmemnt projects.
 2. Align setup scripts, device configuration, and hardware support with the current physical AeroJudge Device product.
 
 Changes will be made through focused branches and reviewed before merging to `main`. The intent is to avoid broad live edits on `main` and keep identity, release, setup, and hardware changes separated enough to review safely.
@@ -44,11 +44,8 @@ PCB revision `3.61+`.
 
 ## Run AeroJudge Device App Locally
 
-1. Open in a dev container
-2. Open new terminal
-3. Edit `/var/opt/judge/settings.json` with the correct Score host and port.
-   The file is mounted from `.devcontainer/judge` and can be modified there
-   instead.
+1. Create or edit `/var/opt/judge/settings.json` with the correct Score host
+   and port.
 
 ```sh
 sudo vi /var/opt/judge/settings.json
@@ -59,19 +56,19 @@ eg.
   "line_number":1,
   "score_host":"192.168.8.100",
   "score_http_port":80,
-  "language":"en"
-  "seasonYear":"26"
+  "language":"en",
+  "seasonYear":26
 }
 ```
 
-4. Run the app:
+2. Run the app:
 
 ```sh
 cd judge
 ./mvnw spring-boot:run
 ```
 
-5. Open <http://localhost:8080> in a local browser.
+3. Open <http://localhost:8080> in a local browser.
 
 ## Build AeroJudge Device App
 
@@ -109,6 +106,15 @@ GitHub release automation publishes stable asset names: `judge.jar`,
    ```sh
    docker build -t aerojudge-device-app:latest .
    docker run -p 8080:8080 aerojudge-device-app:latest
+   ```
+
+   The image includes `dockerbuild/settings.json` as its default
+   `/var/opt/judge/settings.json`. Keep that file aligned with the defaults in
+   `SettingDTO`, then edit it before building or mount a local settings file
+   when running:
+
+   ```sh
+   docker run -p 8080:8080 -v /path/to/settings.json:/var/opt/judge/settings.json aerojudge-device-app:latest
    ```
 
 3. Open <http://localhost:8080> in a local browser.

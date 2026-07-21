@@ -26,7 +26,7 @@ Primary identity migration changes:
 - User-facing product naming standardized on `AeroJudge Device App` for the
   application/repository and `AeroJudge Device` for the runtime device product.
 - Legacy IMAC repository history is intentionally not copied into the final
-  AeroJudge repository so the new product line starts with clean history.
+  AeroJudge repository so the new ecosystem starts with clean history.
 
 Versioning, release automation, current hardware setup, device config, volume
 service behavior, and legacy archive/mirror policy are handled in separate

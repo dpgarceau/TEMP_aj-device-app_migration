@@ -8,6 +8,8 @@ COPY --chown=judge:judge figures/ /var/opt/judge/figures/
 # Maven package copies the versioned build output to dockerbuild/app.jar.
 # The runtime name stays judge.jar to match device service behavior.
 COPY --chown=judge:judge dockerbuild/app.jar /var/opt/judge/bin/judge.jar
+# Keep dockerbuild/settings.json aligned with SettingDTO defaults unless a Docker-only
+# default is intentionally needed.
 COPY --chown=judge:judge dockerbuild/settings.json /var/opt/judge/settings.json
 COPY --chown=judge:judge scripts/judge_update.sh /home/judge/judge_update.sh
 COPY --chown=judge:judge scripts/fetch_update.sh /home/judge/fetch_update.sh

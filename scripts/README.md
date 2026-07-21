@@ -31,8 +31,9 @@ validates the result, and offers to reboot.
 
 ## Test an Unreleased Setup Script
 
-To test the setup code from another repository or branch, override both source
-endpoints before running the launcher:
+The launcher normally downloads setup code from the production `main` branch of
+`AeroJudge/aerojudge-device-app`. To test setup code from an unreleased branch
+or fork, override both source endpoints before running the launcher:
 
 ```sh
 cd /home/judge
@@ -41,21 +42,24 @@ export AEROJUDGE_RELEASE_API_URL="https://api.github.com/repos/<owner>/<repo>/re
 ./build_aerojudge.sh
 ```
 
-For this repository's `test/fresh-device-setup` branch:
+For the current temporary migration repository, use `main`:
 
 ```sh
 cd /home/judge
-export AEROJUDGE_RAW_BASE_URL="https://raw.githubusercontent.com/dpgarceau/TEMP_aj-device-app_migration/refs/heads/test/fresh-device-setup"
+export AEROJUDGE_RAW_BASE_URL="https://raw.githubusercontent.com/dpgarceau/TEMP_aj-device-app_migration/refs/heads/main"
 export AEROJUDGE_RELEASE_API_URL="https://api.github.com/repos/dpgarceau/TEMP_aj-device-app_migration/releases/latest"
 ./build_aerojudge.sh
 ```
 
 The launcher exports those values before running `judge_setup.sh`, so the setup
 script, update fetcher, and release installer use the same test endpoints.
-The release endpoint must contain a `volume_service.zip` built from the same
-PCB 3.61 implementation; changing only the raw branch URL does not change
-release assets. Test release tags must use the stable `vYY.MAJOR.MINOR`
-format, for example `v26.1.0`.
+Changing only the raw branch URL changes scripts, not release assets. If the
+branch requires matching binaries or service archives, publish a test release
+from the same repository and point `AEROJUDGE_RELEASE_API_URL` at that
+repository's releases API. The release endpoint must contain `judge.jar`,
+`figures.zip`, and `volume_service.zip` built from compatible source. Test
+release tags must use the stable `vYY.MAJOR.MINOR` format, for example
+`v26.1.0`.
 
 ## What Setup Installs
 
