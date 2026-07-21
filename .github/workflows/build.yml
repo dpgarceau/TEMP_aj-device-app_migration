@@ -1,12 +1,14 @@
 name: Create Release
 
 # Builds and publishes assets for strict stable vYY.MAJOR.MINOR tags.
-# Create Tag owns release-relevant path detection; this workflow trusts an
-# existing stable tag and validates the packaged release contract.
+# Create Tag owns release-relevant path detection; successful Create Tag
+# completion is the automatic handoff because tags pushed with GITHUB_TOKEN do
+# not trigger follow-on tag-push workflows.
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_run:
+    workflows: ["Create Tag"]
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       release_tag:
@@ -16,6 +18,7 @@ on:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -33,11 +36,20 @@ jobs:
         if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
           tag="${{ inputs.release_tag }}"
         else
-          tag="${{ github.ref_name }}"
+          head_sha="${{ github.event.workflow_run.head_sha }}"
+          # Automatic releases use the strict stable tag created by Create Tag
+          # on the same main commit. Do not re-run release path detection here.
+          tag="$(git tag --points-at "$head_sha" | grep -E '^v[0-9]{2}\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+          if [ -z "$tag" ]; then
+            echo "Release tag validation failed." >&2
+            echo "Create Tag completed successfully, but no stable vYY.MAJOR.MINOR tag points at commit $head_sha." >&2
+            echo "Release assets were not published because the automatic handoff tag could not be found." >&2
+            exit 1
+          fi
         fi
 
-        # Manual rebuilds must name an existing stable tag. Invalid tags fail
-        # here with a direct message instead of producing partial release work.
+        # Manual rebuilds must name an existing stable tag. Automatic runs must
+        # find one at the successful Create Tag commit.
         if [[ ! "$tag" =~ ^v[0-9]{2}\.[0-9]+\.[0-9]+$ ]]; then
           echo "Release tag validation failed." >&2
           echo "Tag: ${tag:-<missing>}" >&2
